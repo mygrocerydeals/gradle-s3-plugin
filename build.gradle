@@ -1,0 +1,69 @@
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.+'
+    }
+}
+
+plugins {
+    id 'java-gradle-plugin'
+    id 'maven-publish'
+    id 'idea'
+}
+
+wrapper {
+    gradleVersion = '6.0.1'
+}
+
+group = 'com.mgd.core'
+version = '1.0.0'
+
+jar {
+    manifest {
+        attributes([
+                'Manifest-Version': '1.0',
+                'Build-Tag'       : "$buildTag"
+        ])
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    amazonAWSVersion = '1.11.690'
+}
+
+dependencies {
+    implementation gradleApi()
+    implementation localGroovy()
+    api group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: amazonAWSVersion
+}
+
+publishing {
+    repositories {
+        maven {
+            name 'MGD-Maven'
+            url 's3://mgd-maven'
+            credentials(AwsCredentials) {
+                def defaultCredentials = new DefaultAWSCredentialsProviderChain().getCredentials()
+                accessKey defaultCredentials.getAWSAccessKeyId()
+                secretKey defaultCredentials.getAWSSecretKey()
+            }
+        }
+    }
+
+    publications {
+        pluginMaven(MavenPublication) {
+            pom.withXml {
+                asNode().appendNode('properties').appendNode('build.tag', buildTag)
+            }
+        }
+
+    }
+}
