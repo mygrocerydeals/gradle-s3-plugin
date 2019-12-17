@@ -11,7 +11,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-  id "com.mgd.core.gradle.s3" version "1.0.2"
+  id 'com.mgd.core.gradle.s3' version '1.0.2'
 }
 ```
 
@@ -68,8 +68,8 @@ For a recursive download:
   + `keyPrefix` - S3 prefix of objects to download
   + `destDir` - local directory to download objects to
 
-***Nota Bene***: recursive downloads create a sparse directory tree
-containing the full `keyPrefix` under `destDir`. So with an S3 bucket
+***Note***:  
+Recursive downloads create a sparse directory tree containing the full `keyPrefix` under `destDir`. So with an S3 bucket
 containing the object keys:
 
 ```
@@ -81,8 +81,8 @@ a recursive download:
 
 ```groovy
 task downloadRecursive(type: S3Download) {
-  keyPrefix = "top/foo/"
-  destDir = "local-dir"
+  keyPrefix = 'top/foo/'
+  destDir = 'local-dir'
 }
 ```
 
@@ -90,8 +90,9 @@ results in this local tree:
 
 ```
 local-dir/
-└── foo
-    └── bar
+└── top
+    └── foo
+        └── bar
 ```
 
 So only files under `top/foo` are downloaded, but their full S3 paths are appended to the `destDir`. This is different from the behavior of the aws cli `aws s3 cp --recursive` command which prunes the root of the downloaded objects. Use the flexible [Gradle Copy](https://docs.gradle.org/current/dsl/org.gradle.api.tasks.Copy.html) task to prune the tree after downloading it.
@@ -99,15 +100,18 @@ So only files under `top/foo` are downloaded, but their full S3 paths are append
 For example:
 
 ```groovy
+def localTree = 'path/to/some/location'
+
 task downloadRecursive(type: S3Download) {
-  keyPrefix = "${root}/tree"
-  destDir = "${buildDir}/download-tree"
+    bucket = 's3-bucket-name'
+    keyPrefix = "${localTree}"
+    destDir = "${buildDir}/download-root"
 }
 
 // prune and re-root the downloaded tree, removing the keyPrefix
 task copyDownload(type: Copy, dependsOn: downloadRecursive) {
-    from "${buildDir}/download-tree/${root}/tree"
-    into "${buildDir}/pruned-copy"
+    from "${buildDir}/download-root/${localTree}"
+    into "${buildDir}/pruned-tree"
 }
 ```
 
