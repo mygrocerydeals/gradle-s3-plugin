@@ -1,17 +1,6 @@
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
-
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.+'
-    }
-}
-
 plugins {
     id 'java-gradle-plugin'
-    id 'maven-publish'
+    id 'com.gradle.plugin-publish' version '0.10.1'
     id 'idea'
     id 'groovy'
 }
@@ -50,30 +39,15 @@ gradlePlugin {
     plugins {
         s3Plugin {
             id = 'com.mgd.core.gradle.s3'
+            displayName = 'Gradle S3 Plugin'
+            description = 'Lightweight S3 upload and download plugin'
             implementationClass = 'com.mgd.core.gradle.S3Plugin'
         }
     }
 }
 
-publishing {
-    repositories {
-        maven {
-            name 'MGD-Maven'
-            url 's3://mgd-maven'
-            credentials(AwsCredentials) {
-                def defaultCredentials = new DefaultAWSCredentialsProviderChain().getCredentials()
-                accessKey defaultCredentials.getAWSAccessKeyId()
-                secretKey defaultCredentials.getAWSSecretKey()
-            }
-        }
-    }
-
-    publications {
-        pluginMaven(MavenPublication) {
-            pom.withXml {
-                asNode().appendNode('properties').appendNode('build.tag', buildTag)
-            }
-        }
-
-    }
+pluginBundle {
+    website = 'https://github.com/mygrocerydeals/gradle-s3-plugin/blob/master/README.md'
+    vcsUrl = 'https://github.com/mygrocerydeals/gradle-s3-plugin'
+    tags = ['aws', 's3']
 }
