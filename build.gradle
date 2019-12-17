@@ -13,6 +13,7 @@ plugins {
     id 'java-gradle-plugin'
     id 'maven-publish'
     id 'idea'
+    id 'groovy'
 }
 
 wrapper {
@@ -20,7 +21,7 @@ wrapper {
 }
 
 group = 'com.mgd.core'
-version = '1.0.0'
+version = '1.0.1'
 
 jar {
     manifest {
@@ -43,6 +44,15 @@ dependencies {
     implementation gradleApi()
     implementation localGroovy()
     api group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: amazonAWSVersion
+}
+
+gradlePlugin {
+    plugins {
+        s3Plugin {
+            id = 'com.mgd.core.gradle.s3'
+            implementationClass = 'com.mgd.core.gradle.S3Plugin'
+        }
+    }
 }
 
 publishing {
