@@ -1,4 +1,4 @@
-# S3 Gradle Plugin
+# Gradle S3 Plugin
 [![Install](https://img.shields.io/badge/install-plugin-brown.svg)](https://plugins.gradle.org/plugin/com.github.mgk.gradle.s3)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 
@@ -11,7 +11,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-  id "com.mgd.core.gradle.s3" version "1.0.1"
+  id "com.mgd.core.gradle.s3" version "1.0.2"
 }
 ```
 
@@ -99,24 +99,6 @@ So only files under `top/foo` are downloaded, but their full S3 paths are append
 ## Progress Reporting
 
 Downloads report percentage progress at the gradle INFO level. Run gradle with the `-i` option to see download progress.
-
-## Development Notes
-
-The `uploadArchives` task deploys to a local file maven repo under the build
-directory. It also writes the current build to `build/VERSION`. The file
-`example/build.gradle` serves as tests and doc. The tests use the local build
-of the plugin.
-
-The tests use a generated unique path in a test bucket to exercise all
-of the plugins features.
-
-The test bucket has a [AWS Object Expiration](https://aws.amazon.com/blogs/aws/amazon-s3-object-expiration/) policy that removes objects older
-than one day automatically, so yay, no cleanup required.
-
-The automated build uses an IAM access key that allows `listBucket`, `getObject`,
-and `putObject` on the test bucket only. The AWS credits configured as Travis
-environment variables. The access key id is not a secret so it is shown in the
-logs, while the secret access key is secret and not shown.
 
 ## License
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)

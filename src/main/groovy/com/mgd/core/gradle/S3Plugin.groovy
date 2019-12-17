@@ -92,9 +92,11 @@ class S3Upload extends S3Task {
 
 
 class S3Download extends S3Task {
+    @Optional
     @Input
     String key
 
+    @Optional
     @Input
     String file
 
