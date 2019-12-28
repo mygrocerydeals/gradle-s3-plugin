@@ -13,6 +13,7 @@ import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.transfer.Transfer
 import com.amazonaws.services.s3.transfer.TransferManager
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
@@ -23,6 +24,7 @@ import org.gradle.api.tasks.Optional
 import java.text.DecimalFormat
 
 class S3Extension {
+
     String profile
     String region
     String bucket
@@ -30,6 +32,8 @@ class S3Extension {
 
 
 abstract class S3Task extends DefaultTask {
+
+    @Optional
     @Input
     String bucket
 
@@ -63,6 +67,7 @@ abstract class S3Task extends DefaultTask {
 
 
 class S3Upload extends S3Task {
+
     @Input
     String key
 
@@ -92,6 +97,7 @@ class S3Upload extends S3Task {
 
 
 class S3Download extends S3Task {
+
     @Optional
     @Input
     String key
@@ -114,17 +120,27 @@ class S3Download extends S3Task {
         Transfer transfer
 
         // directory download
-        if (keyPrefix != null) {
+        if (keyPrefix && destDir) {
+            if (key || file) {
+                throw new GradleException('Invalid parameters: [key, file] are not valid for S3 Download recursive')
+            }
             logger.quiet("S3 Download recursive s3://${bucket}/${keyPrefix} → ${project.file(destDir)}/")
             transfer = tm.downloadDirectory(bucket, keyPrefix, project.file(destDir))
         }
 
         // single file download
-        else {
+        else if (key && file) {
+            if (keyPrefix || destDir) {
+                throw new GradleException('Invalid parameters: [keyPrefix, destDir] are not valid for S3 Download single file')
+            }
             logger.quiet("S3 Download s3://${bucket}/${key} → ${file}")
             File f = new File(file)
             f.parentFile.mkdirs()
             transfer = tm.download(bucket, key, f)
+        }
+
+        else {
+            throw new GradleException('Invalid parameters: one of [key, file] or [keyPrefix, destDir] pairs must be specified for S3 Download')
         }
 
         def listener = new S3Listener()
@@ -145,6 +161,7 @@ class S3Download extends S3Task {
 
 
 class S3Plugin implements Plugin<Project> {
+
     void apply(Project target) {
         target.extensions.create('s3', S3Extension)
     }
