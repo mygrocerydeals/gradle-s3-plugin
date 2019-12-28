@@ -79,6 +79,11 @@ class S3Upload extends S3Task {
 
     @TaskAction
     def task() {
+
+        if (!bucket) {
+            throw new GradleException('Invalid parameters: [bucket] was not provided and/or a default was not set')
+        }
+
         if (s3Client.doesObjectExist(bucket, key)) {
             if (overwrite) {
                 logger.quiet("S3 Upload ${file} → s3://${bucket}/${key} with overwrite")
@@ -118,6 +123,10 @@ class S3Download extends S3Task {
     def task() {
         TransferManager tm = new TransferManager()
         Transfer transfer
+
+        if (!bucket) {
+            throw new GradleException('Invalid parameters: [bucket] was not provided and/or a default was not set')
+        }
 
         // directory download
         if (keyPrefix && destDir) {

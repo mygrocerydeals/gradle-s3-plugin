@@ -10,7 +10,7 @@ wrapper {
 }
 
 group = 'com.mgd.core'
-version = '1.0.3'
+version = '1.0.4'
 
 jar {
     manifest {
