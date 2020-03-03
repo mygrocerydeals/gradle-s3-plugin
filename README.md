@@ -11,7 +11,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-  id 'com.mgd.core.gradle.s3' version '1.0.4'
+  id 'com.mgd.core.gradle.s3' version '1.1.0'
 }
 ```
 
@@ -35,6 +35,26 @@ s3 {
 
 Setting the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` is one way to provide your S3 credentials. See the [AWS Docs](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html) for details on credentials.
 
+## Amazon EC2 Region
+
+The `s3.region` property can optionally be set to define the Amazon EC2 region if one has not been set in the authentication profile. It can also be used to override the default region set in the AWS credentials provider. 
+
+```groovy
+s3 {
+    region = 'us-east-1'
+}
+```
+
+## Default S3 Bucket
+
+The `s3.bucket` property sets a default S3 bucket that is common to all tasks. This can be useful if all S3 tasks operate against the same Amazon S3 bucket.
+
+```groovy
+s3 {
+    bucket = 'my.default.bucketname'
+}
+```
+
 ## Tasks
 
 The following Gradle tasks are provided.
@@ -42,14 +62,24 @@ The following Gradle tasks are provided.
 
 ### S3Upload
 
-Upload a file to S3. Properties:
+Uploads one or more files to S3. This task has two modes of operation: single file upload and directory upload (including recursive upload of all child subdirectories). Properties that apply to both modes:
 
   + `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket)*
+
+For a single file upload:
+
+  + `key` - key of S3 object to create
   + `file` - path of file to be uploaded
-  + `key` - key of S3 object to create.
   + `overwrite` - *(optional, default is `false`)*, if `true` the S3 object is created or overwritten if it already exists.
 
 By default `S3Upload` does not overwrite the S3 object if it already exists. Set `overwrite` to `true` to upload the file even if it exists.
+
+For a directory upload:
+
+  + `keyPrefix` - root S3 prefix under which to create the uploaded contents
+  + `sourceDir` - local directory containing the contents to be uploaded
+
+A directory upload will always overwrite existing content if it already exists under the specified S3 prefix.
 
 ### S3Download
 
@@ -69,6 +99,7 @@ For a recursive download:
   + `destDir` - local directory to download objects to
 
 ***Note***:  
+  
 Recursive downloads create a sparse directory tree containing the full `keyPrefix` under `destDir`. So with an S3 bucket
 containing the object keys:
 

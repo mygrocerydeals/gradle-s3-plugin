@@ -21,6 +21,7 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.Optional
 
 import java.text.DecimalFormat
+import org.gradle.api.logging.Logger
 
 class S3Extension {
 
@@ -108,8 +109,8 @@ class S3Upload extends S3Task {
             Transfer transfer = TransferManagerBuilder.newInstance().withS3Client(s3Client).build()
                                     .uploadDirectory(bucket, keyPrefix, project.file(sourceDir), true)
 
-            def listener = new S3Listener()
-            listener.transfer = transfer
+
+            def listener = new S3Listener(transfer, logger)
             transfer.addProgressListener(listener)
             transfer.waitForCompletion()
         }
@@ -134,16 +135,6 @@ class S3Upload extends S3Task {
 
         else {
             throw new GradleException('Invalid parameters: one of [key, file] or [keyPrefix, sourceDir] pairs must be specified for S3 Upload')
-        }
-    }
-
-    class S3Listener implements ProgressListener {
-
-        Transfer transfer
-
-        DecimalFormat df = new DecimalFormat("#0.0")
-        void progressChanged(ProgressEvent e) {
-            logger.info("${df.format(transfer.progress.percentTransferred)}%")
         }
     }
 }
@@ -202,20 +193,26 @@ class S3Download extends S3Task {
             throw new GradleException('Invalid parameters: one of [key, file] or [keyPrefix, destDir] pairs must be specified for S3 Download')
         }
 
-        def listener = new S3Listener()
-        listener.transfer = transfer
+        def listener = new S3Listener(transfer, logger)
         transfer.addProgressListener(listener)
         transfer.waitForCompletion()
     }
+}
 
-    class S3Listener implements ProgressListener {
 
-        Transfer transfer
+class S3Listener implements ProgressListener {
 
-        DecimalFormat df = new DecimalFormat("#0.0")
-        void progressChanged(ProgressEvent e) {
-            logger.info("${df.format(transfer.progress.percentTransferred)}%")
-        }
+    DecimalFormat df = new DecimalFormat("#0.0")
+    Transfer transfer
+    Logger logger
+
+    S3Listener(Transfer transfer, Logger logger) {
+        this.transfer = transfer
+        this.logger = logger
+    }
+
+    void progressChanged(ProgressEvent e) {
+        logger.info("${df.format(transfer.progress.percentTransferred)}%")
     }
 }
 
