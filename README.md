@@ -2,8 +2,11 @@
 [![Install](https://img.shields.io/badge/install-plugin-brown.svg)](https://plugins.gradle.org/plugin/com.github.mgk.gradle.s3)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 
-Simple Gradle plugin that uploads and downloads S3 objects. This is a fork of the [mgk/s3-plugin](https://github.com/mgk/s3-plugin), which no longer appears to be under active development.
-It has been updated to work with Gradle version 6 and later.
+Simple Gradle plugin that uploads and downloads S3 objects. This is a fork of 
+the [gradle-s3-plugin](https://github.com/mygrocerydeals/gradle-s3-plugin) which 
+is a fork of [mgk/s3-plugin](https://github.com/mgk/s3-plugin), which both  
+appear to be no longer under active development.  It has been updated to work with 
+Gradle version 6 and later.
 
 ## Setup
 
@@ -11,7 +14,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-  id 'com.mgd.core.gradle.s3' version '1.1.0'
+  id 'com.fuseanalytics.gradle.s3' version '1.1.0'
 }
 ```
 

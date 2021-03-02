@@ -1,6 +1,6 @@
 plugins {
     id 'java-gradle-plugin'
-    id 'com.gradle.plugin-publish' version '0.10.1'
+    id 'com.gradle.plugin-publish' version '0.12.0'
     id 'idea'
     id 'groovy'
 }
@@ -9,8 +9,8 @@ wrapper {
     gradleVersion = '6.2.2'
 }
 
-group = 'com.mgd.core'
-version = '1.1.0'
+group = 'com.fuseanalytics'
+version = '1.1.1'
 
 jar {
     manifest {
@@ -38,16 +38,19 @@ dependencies {
 gradlePlugin {
     plugins {
         s3Plugin {
-            id = 'com.mgd.core.gradle.s3'
+            id = 'com.fuseanalytics.gradle.s3'
             displayName = 'Gradle S3 Plugin'
-            description = 'Lightweight S3 upload and download plugin'
-            implementationClass = 'com.mgd.core.gradle.S3Plugin'
+            description = """
+                             Lightweight S3 upload and download plugin 
+                             that supports single and multiple file 
+                             uploads/downloads"""
+            implementationClass = 'com.fuseanalytics.gradle.s3.S3Plugin'
         }
     }
 }
 
 pluginBundle {
-    website = 'https://github.com/mygrocerydeals/gradle-s3-plugin/blob/master/README.md'
-    vcsUrl = 'https://github.com/mygrocerydeals/gradle-s3-plugin'
+    website = 'https://github.com/chubbard/gradle-s3-plugin/blob/master/README.md'
+    vcsUrl = 'https://github.com/chubbard/gradle-s3-plugin'
     tags = ['aws', 's3']
 }

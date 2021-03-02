@@ -1,4 +1,4 @@
-package com.mgd.core.gradle
+package com.fuseanalytics.gradle.s3
 
 import com.amazonaws.auth.AWSCredentialsProviderChain
 import com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper
