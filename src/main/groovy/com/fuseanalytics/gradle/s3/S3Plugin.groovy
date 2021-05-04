@@ -12,6 +12,8 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer.Transfer
 import com.amazonaws.services.s3.transfer.TransferManager
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
+import com.amazonaws.services.s3.transfer.Upload
+import com.amazonaws.services.s3.transfer.model.UploadResult
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -98,44 +100,50 @@ class S3Upload extends S3Task {
             throw new GradleException('Invalid parameters: [bucket] was not provided and/or a default was not set')
         }
 
-        // directory upload
-        if (keyPrefix && sourceDir) {
+        TransferManager manager = TransferManagerBuilder.standard()
+                .withS3Client(s3Client)
+                .withMultipartUploadThreshold((long) (100 * 1024 * 1025))
+                .build()
+        try {
+            // directory upload
+            if (keyPrefix && sourceDir) {
 
-            if (key || file) {
-                throw new GradleException('Invalid parameters: [key, file] are not valid for S3 Upload directory')
-            }
+                if (key || file) {
+                    throw new GradleException('Invalid parameters: [key, file] are not valid for S3 Upload directory')
+                }
 
-            logger.quiet("S3 Upload directory ${project.file(sourceDir)}/ → s3://${bucket}/${keyPrefix}")
+                logger.quiet("S3 Upload directory ${project.file(sourceDir)}/ → s3://${bucket}/${keyPrefix}")
 
-            TransferManager manager = TransferManagerBuilder.newInstance().withS3Client(s3Client).build()
-            try {
                 Transfer transfer = manager.uploadDirectory(bucket, keyPrefix, project.file(sourceDir), true)
 
 
-                def listener = new S3Listener(transfer, logger)
+                S3Listener listener = new S3Listener(transfer, logger)
                 transfer.addProgressListener(listener)
                 transfer.waitForCompletion()
-            } finally {
-                manager.shutdownNow()
             }
-        }
-
-        // single file upload
-        else if (key && file) {
-
-            if (s3Client.doesObjectExist(bucket, key)) {
-                if (overwrite) {
-                    logger.quiet("S3 Upload ${file} → s3://${bucket}/${key} with overwrite")
-                    s3Client.putObject(bucket, key, new File(file))
+            // single file upload
+            else if (key && file) {
+                Upload up = null
+                if (s3Client.doesObjectExist(bucket, key)) {
+                    if (overwrite) {
+                        logger.quiet("S3 Upload ${file} → s3://${bucket}/${key} with overwrite")
+                        up = manager.upload(bucket, key, new File(file))
+                    } else {
+                        logger.quiet("s3://${bucket}/${key} exists, not overwriting")
+                    }
                 } else {
-                    logger.quiet("s3://${bucket}/${key} exists, not overwriting")
+                    logger.quiet("S3 Upload ${file} → s3://${bucket}/${key}")
+                    up = manager.upload(bucket, key, new File(file))
                 }
+                S3Listener listener = new S3Listener(up, logger)
+                up.addProgressListener(listener)
+                UploadResult result = up.waitForUploadResult()
+                logger.info("S3 Upload completed: s3://${result.bucketName}/${result.key}")
             } else {
-                logger.quiet("S3 Upload ${file} → s3://${bucket}/${key}")
-                s3Client.putObject(bucket, key, new File(file))
+                throw new GradleException('Invalid parameters: one of [key, file] or [keyPrefix, sourceDir] pairs must be specified for S3 Upload')
             }
-        } else {
-            throw new GradleException('Invalid parameters: one of [key, file] or [keyPrefix, sourceDir] pairs must be specified for S3 Upload')
+        } finally {
+            manager.shutdownNow()
         }
     }
 }
