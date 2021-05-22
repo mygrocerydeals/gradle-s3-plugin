@@ -40,7 +40,6 @@ abstract class S3Task extends DefaultTask {
     @Input
     String bucket
 
-    @Optional
     @Internal
     Closure<Void> then
 
