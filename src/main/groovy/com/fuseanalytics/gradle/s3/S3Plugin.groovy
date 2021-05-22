@@ -92,6 +92,9 @@ class S3Upload extends S3Task {
 
     @Input
     boolean overwrite = false
+
+    @Input
+    Integer minMultipartUploadThreshold = 100
     
     @TaskAction
     def task() {
@@ -102,7 +105,7 @@ class S3Upload extends S3Task {
 
         TransferManager manager = TransferManagerBuilder.standard()
                 .withS3Client(s3Client)
-                .withMultipartUploadThreshold((long) (100 * 1024 * 1025))
+                .withMultipartUploadThreshold((long) (minMultipartUploadThreshold * 1024 * 1025))
                 .build()
         try {
             // directory upload
