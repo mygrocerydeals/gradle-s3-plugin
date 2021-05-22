@@ -40,7 +40,7 @@ abstract class S3Task extends DefaultTask {
     @Input
     String bucket
 
-    @Optional
+    //@Optional
     Closure<Void> then
 
     String getBucket() { bucket ?: project.s3.bucket }
