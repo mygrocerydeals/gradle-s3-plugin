@@ -1,6 +1,7 @@
 # Gradle S3 Plugin
-[![Install](https://img.shields.io/badge/install-plugin-brown.svg)](https://plugins.gradle.org/plugin/com.github.mgk.gradle.s3)
+[![Install](https://img.shields.io/badge/install-plugin-brown.svg)](https://plugins.gradle.org/plugin/com.fuseanalytics.gradle.s3)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
+[![Gradle Plugin](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com/fuseanalytics/gradle/s3/com.fuseanalytics.gradle.s3/maven-metadata.xml.svg?label=gradle)](Gradle Plugin Version)
 
 Simple Gradle plugin that uploads and downloads S3 objects. This is a fork of 
 the [gradle-s3-plugin](https://github.com/mygrocerydeals/gradle-s3-plugin) which 
@@ -14,7 +15,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-  id 'com.fuseanalytics.gradle.s3' version '1.1.2'
+  id 'com.fuseanalytics.gradle.s3' version '1.1.3'
 }
 ```
 
@@ -74,6 +75,7 @@ For a single file upload:
   + `key` - key of S3 object to create
   + `file` - path of file to be uploaded
   + `overwrite` - *(optional, default is `false`)*, if `true` the S3 object is created or overwritten if it already exists.
+  + `then` - *(optional)*, callback closure called upon completion with the java.io.File that was uploaded.
 
 By default `S3Upload` does not overwrite the S3 object if it already exists. Set `overwrite` to `true` to upload the file even if it exists.
 
@@ -81,6 +83,7 @@ For a directory upload:
 
   + `keyPrefix` - root S3 prefix under which to create the uploaded contents
   + `sourceDir` - local directory containing the contents to be uploaded
+  + `then` - *(optional)*, callback closure called upon completion with each java.io.File that was uploaded.
 
 A directory upload will always overwrite existing content if it already exists under the specified S3 prefix.
 
@@ -95,11 +98,13 @@ For a single file download:
 
   + `key` - key of S3 object to download
   + `file` - local path of file to save the download to
+  + `then` - *(optional)*, callback closure called upon completion with the java.io.File that was downloaded.
 
 For a recursive download:
 
   + `keyPrefix` - S3 prefix of objects to download
   + `destDir` - local directory to download objects to
+  + `then` - *(optional)*, callback closure called upon completion with each java.io.File that was downloaded.
 
 ***Note***:  
   
@@ -117,6 +122,9 @@ a recursive download:
 task downloadRecursive(type: S3Download) {
   keyPrefix = 'top/foo/'
   destDir = 'local-dir'
+  then = { File file ->
+      // do something with the file
+  }  
 }
 ```
 
