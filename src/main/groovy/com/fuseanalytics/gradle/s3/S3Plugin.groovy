@@ -40,6 +40,9 @@ abstract class S3Task extends DefaultTask {
     @Input
     String bucket
 
+    @Optional
+    Closure<Void> then
+
     String getBucket() { bucket ?: project.s3.bucket }
 
     @Internal
@@ -119,6 +122,9 @@ class S3Upload extends S3Task {
 
                 Transfer transfer = manager.uploadDirectory(bucket, keyPrefix, project.file(sourceDir), true)
 
+                for( Upload u : transfer.getSubTransfers() ) {
+                    u.addProgressListener( new AfterUploadListener( u, project.file(sourceDir), then ) )
+                }
 
                 S3Listener listener = new S3Listener(transfer, logger)
                 transfer.addProgressListener(listener)
@@ -140,6 +146,7 @@ class S3Upload extends S3Task {
                 }
                 S3Listener listener = new S3Listener(up, logger)
                 up.addProgressListener(listener)
+                up.addProgressListener(new AfterUploadListener(up, project.file(file), then))
                 UploadResult result = up.waitForUploadResult()
                 logger.info("S3 Upload completed: s3://${result.bucketName}/${result.key}")
             } else {
@@ -188,6 +195,10 @@ class S3Download extends S3Task {
                 }
                 logger.quiet("S3 Download recursive s3://${bucket}/${keyPrefix} → ${project.file(destDir)}/")
                 transfer = manager.downloadDirectory(bucket, keyPrefix, project.file(destDir))
+
+                for( Upload u : transfer.getSubTransfers() ) {
+                    u.addProgressListener( new AfterUploadListener( u, project.file(destDir), then ) )
+                }
             }
 
             // single file download
@@ -205,6 +216,7 @@ class S3Download extends S3Task {
 
             def listener = new S3Listener(transfer, logger)
             transfer.addProgressListener(listener)
+            transfer.addProgressListener( new AfterUploadListener( (Upload)transfer, project.file(file), then ) )
             transfer.waitForCompletion()
         } finally {
             manager.shutdownNow()
