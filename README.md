@@ -1,7 +1,7 @@
 # Gradle S3 Plugin
 [![Install](https://img.shields.io/badge/install-plugin-brown.svg)](https://plugins.gradle.org/plugin/com.fuseanalytics.gradle.s3)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
-[![Gradle Plugin](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com/fuseanalytics/gradle/s3/com.fuseanalytics.gradle.s3.gradle.plugin/maven-metadata.xml.svg?label=gradle)](Gradle Plugin Version)
+[![Gradle Plugin](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com/fuseanalytics/gradle/s3/com.fuseanalytics.gradle.s3.gradle.plugin/maven-metadata.xml.svg?label=gradle)](https://plugins.gradle.org/plugin/com.fuseanalytics.gradle.s3)
 
 Simple Gradle plugin that uploads and downloads S3 objects. This is a fork of 
 the [gradle-s3-plugin](https://github.com/mygrocerydeals/gradle-s3-plugin) which 
