@@ -1,16 +1,17 @@
 plugins {
     id 'java-gradle-plugin'
-    id 'com.gradle.plugin-publish' version '0.13.0'
+    id 'com.gradle.plugin-publish' version '0.17.0'
     id 'idea'
     id 'groovy'
 }
 
 wrapper {
-    gradleVersion = '6.8.3'
+    gradleVersion = '7.2'
 }
 
 group = 'com.mgd.core'
-version = '1.1.1'
+version = '1.1.2'
+sourceCompatibility = '17'
 
 jar {
     manifest {
@@ -26,7 +27,7 @@ repositories {
 }
 
 ext {
-    amazonAWSVersion = '1.11.974'
+    amazonAWSVersion = '1.12.105'
 }
 
 dependencies {
