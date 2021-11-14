@@ -139,8 +139,8 @@ task filesUpload(type: S3Upload) {
 }
 
 task defaultSingleFileUpload(type: S3Upload) {
-    key = 'source-filename'
-    file = 'target-filename'
+    key = 'target-filename'
+    file = 'source-filename'
 }
 ```
 
