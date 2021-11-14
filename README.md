@@ -99,7 +99,53 @@ For a recursive download:
   + `destDir` - local directory to download objects to
 
 ***Note***:  
+
+Use the fully qualified name when defining the Gradle tasks:
+
+* com.mgd.core.gradle.s3.S3Upload  
+* com.mgd.core.gradle.s3.S3Download  
+
+Alternatively, you can add the following `import` statement to the top of the build file to use the non-qualified names:  
+  + `import com.mgd.core.gradle.*`
   
+  
+### Example:
+
+```groovy
+import com.mgd.core.gradle.*
+
+...
+
+s3 {
+    bucket = 'project.default.bucketname'
+    region = 'us-east-1'
+}
+
+task defaultFilesDownload(type: S3Download) {
+    keyPrefix = 'sourceFolder'
+    destDir = 'targetDirectory'
+}
+
+task singleFileDownload(type: S3Download) {
+    bucket = 'task.source.bucketname'
+    key = 'source-filename'
+    file = 'target-filename'
+}
+
+task filesUpload(type: S3Upload) {
+    bucket = 'task.target.bucketname'
+    keyPrefix = 'targetFolder'
+    sourceDir = 'sourceDirectory'
+}
+
+task defaultSingleFileUpload(type: S3Upload) {
+    key = 'source-filename'
+    file = 'target-filename'
+}
+```
+
+***Note***:
+
 Recursive downloads create a sparse directory tree containing the full `keyPrefix` under `destDir`. So with an S3 bucket
 containing the object keys:
 
