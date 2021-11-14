@@ -102,8 +102,8 @@ For a recursive download:
 
 Use the fully qualified name when defining the Gradle tasks:
 
-* com.mgd.core.gradle.s3.S3Upload  
-* com.mgd.core.gradle.s3.S3Download  
+* com.mgd.core.gradle.S3Upload  
+* com.mgd.core.gradle.S3Download  
 
 Alternatively, you can add the following `import` statement to the top of the build file to use the non-qualified names:  
   + `import com.mgd.core.gradle.*`
