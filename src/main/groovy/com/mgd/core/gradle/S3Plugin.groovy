@@ -10,6 +10,7 @@ import com.amazonaws.event.ProgressListener
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.transfer.Transfer
+import com.amazonaws.services.s3.transfer.TransferManager
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -106,13 +107,17 @@ class S3Upload extends S3Task {
 
             logger.quiet("S3 Upload directory ${project.file(sourceDir)}/ → s3://${bucket}/${keyPrefix}")
 
-            Transfer transfer = TransferManagerBuilder.newInstance().withS3Client(s3Client).build()
-                                    .uploadDirectory(bucket, keyPrefix, project.file(sourceDir), true)
+            TransferManager manager = TransferManagerBuilder.newInstance().withS3Client(s3Client).build()
+            try {
+                Transfer transfer = manager.uploadDirectory(bucket, keyPrefix, project.file(sourceDir), true)
 
 
-            def listener = new S3Listener(transfer, logger)
-            transfer.addProgressListener(listener)
-            transfer.waitForCompletion()
+                def listener = new S3Listener(transfer, logger)
+                transfer.addProgressListener(listener)
+                transfer.waitForCompletion()
+            } finally {
+                manager.shutdownNow()
+            }
         }
 
         // single file upload
@@ -122,18 +127,14 @@ class S3Upload extends S3Task {
                 if (overwrite) {
                     logger.quiet("S3 Upload ${file} → s3://${bucket}/${key} with overwrite")
                     s3Client.putObject(bucket, key, new File(file))
-                }
-                else {
+                } else {
                     logger.quiet("s3://${bucket}/${key} exists, not overwriting")
                 }
-            }
-            else {
+            } else {
                 logger.quiet("S3 Upload ${file} → s3://${bucket}/${key}")
                 s3Client.putObject(bucket, key, new File(file))
             }
-        }
-
-        else {
+        } else {
             throw new GradleException('Invalid parameters: one of [key, file] or [keyPrefix, sourceDir] pairs must be specified for S3 Upload')
         }
     }
@@ -167,35 +168,36 @@ class S3Download extends S3Task {
             throw new GradleException('Invalid parameters: [bucket] was not provided and/or a default was not set')
         }
 
-        // directory download
-        if (keyPrefix && destDir) {
-            if (key || file) {
-                throw new GradleException('Invalid parameters: [key, file] are not valid for S3 Download recursive')
+        TransferManager manager = TransferManagerBuilder.newInstance().withS3Client(s3Client).build()
+        try {
+            // directory download
+            if (keyPrefix && destDir) {
+                if (key || file) {
+                    throw new GradleException('Invalid parameters: [key, file] are not valid for S3 Download recursive')
+                }
+                logger.quiet("S3 Download recursive s3://${bucket}/${keyPrefix} → ${project.file(destDir)}/")
+                transfer = manager.downloadDirectory(bucket, keyPrefix, project.file(destDir))
             }
-            logger.quiet("S3 Download recursive s3://${bucket}/${keyPrefix} → ${project.file(destDir)}/")
-            transfer = TransferManagerBuilder.newInstance().withS3Client(s3Client).build()
-                            .downloadDirectory(bucket, keyPrefix, project.file(destDir))
-        }
 
-        // single file download
-        else if (key && file) {
-            if (keyPrefix || destDir) {
-                throw new GradleException('Invalid parameters: [keyPrefix, destDir] are not valid for S3 Download single file')
+            // single file download
+            else if (key && file) {
+                if (keyPrefix || destDir) {
+                    throw new GradleException('Invalid parameters: [keyPrefix, destDir] are not valid for S3 Download single file')
+                }
+                logger.quiet("S3 Download s3://${bucket}/${key} → ${file}")
+                File f = new File(file)
+                f.parentFile.mkdirs()
+                transfer = manager.download(bucket, key, f)
+            } else {
+                throw new GradleException('Invalid parameters: one of [key, file] or [keyPrefix, destDir] pairs must be specified for S3 Download')
             }
-            logger.quiet("S3 Download s3://${bucket}/${key} → ${file}")
-            File f = new File(file)
-            f.parentFile.mkdirs()
-            transfer = TransferManagerBuilder.newInstance().withS3Client(s3Client).build()
-                            .download(bucket, key, f)
-        }
 
-        else {
-            throw new GradleException('Invalid parameters: one of [key, file] or [keyPrefix, destDir] pairs must be specified for S3 Download')
+            def listener = new S3Listener(transfer, logger)
+            transfer.addProgressListener(listener)
+            transfer.waitForCompletion()
+        } finally {
+            manager.shutdownNow()
         }
-
-        def listener = new S3Listener(transfer, logger)
-        transfer.addProgressListener(listener)
-        transfer.waitForCompletion()
     }
 }
 
