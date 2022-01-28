@@ -163,14 +163,21 @@ class S3Download extends S3Task {
 
     @Optional
     @Input
+    @Deprecated
     String key
 
     @Optional
     @Input
+    Iterable<String> keys
+
+    @Optional
+    @Input
+    @Deprecated
     String file
 
     @Optional
     @Input
+    @Deprecated
     String keyPrefix
 
     @Optional
@@ -180,7 +187,7 @@ class S3Download extends S3Task {
     @TaskAction
     def task() {
 
-        Transfer transfer
+        List<Transfer> transfers
 
         if (!bucket) {
             throw new GradleException('Invalid parameters: [bucket] was not provided and/or a default was not set')
@@ -190,17 +197,16 @@ class S3Download extends S3Task {
         try {
             // directory download
             if (keyPrefix && destDir) {
-                if (key || file) {
+                if (key || file || keys) {
                     throw new GradleException('Invalid parameters: [key, file] are not valid for S3 Download recursive')
                 }
                 logger.quiet("S3 Download recursive s3://${bucket}/${keyPrefix} → ${project.file(destDir)}/")
-                transfer = manager.downloadDirectory(bucket, keyPrefix, project.file(destDir))
+                transfers = [ manager.downloadDirectory(bucket, keyPrefix, project.file(destDir)) ]
 
-                for( Upload u : transfer.getSubTransfers() ) {
+                for( Upload u : transfers.first().getSubTransfers() ) {
                     u.addProgressListener( new AfterUploadListener( u, project.file(destDir), then ) )
                 }
             }
-
             // single file download
             else if (key && file) {
                 if (keyPrefix || destDir) {
@@ -209,15 +215,36 @@ class S3Download extends S3Task {
                 logger.quiet("S3 Download s3://${bucket}/${key} → ${file}")
                 File f = new File(file)
                 f.parentFile.mkdirs()
-                transfer = manager.download(bucket, key, f)
+                transfers = [ manager.download(bucket, key, f) ]
+            }
+            else if( keys && destDir) {
+                if( keyPrefix || key || file ) {
+                    throw new GradleException("Invalid parameters: [keyPrefix, key, file] are not valid for S3 Download using multiple keys syntax")
+                }
+                logger.quiet("S3 Download s3://${bucket}/${keys.join(",")} → ${destDir}")
+                transfers = keys.collect { String key ->
+                    if( key.contains('*') || key.endsWith('/') ) {
+                        String prefix = key.replaceAll( /\*$/, '')
+                        Transfer t = manager.downloadDirectory(bucket, prefix, project.file(destDir) )
+                        for( Upload u : t.getSubTransfers() ) {
+                            u.addProgressListener( new AfterUploadListener(u, project.file(destDir), then) )
+                        }
+                    } else {
+                        return manager.download( bucket, key, project.file(destDir) )
+                    }
+                }
             } else {
                 throw new GradleException('Invalid parameters: one of [key, file] or [keyPrefix, destDir] pairs must be specified for S3 Download')
             }
 
-            def listener = new S3Listener(transfer, logger)
-            transfer.addProgressListener(listener)
-            transfer.addProgressListener( new AfterUploadListener( (Upload)transfer, project.file(file), then ) )
-            transfer.waitForCompletion()
+            transfers.each { Transfer transfer ->
+                def listener = new S3Listener(transfer, logger)
+                transfer.addProgressListener(listener)
+                transfer.addProgressListener( new AfterUploadListener( (Upload)transfer, project.file(file), then ) )
+            }
+            transfers.each { Transfer transfer ->
+                transfer.waitForCompletion()
+            }
         } finally {
             manager.shutdownNow()
         }
