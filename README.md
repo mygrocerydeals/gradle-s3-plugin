@@ -94,13 +94,13 @@ download and recursive download. Properties that apply to both modes:
 
   + `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket)*
 
-For a single file download (deprecated - use keys parameter instead):
+~~For a single file download~~ (deprecated - use keys parameter instead):
 
   + `key` - key of S3 object to download
   + `file` - local path of file to save the download to
   + `then` - *(optional)*, callback closure called upon completion with the java.io.File that was downloaded.
 
-For a recursive download (deprecated - use keys parameter instead):
+~~For a recursive download~~ (deprecated - use keys parameter instead):
 
   + `keyPrefix` - S3 prefix of objects to download
   + `destDir` - local directory to download objects to
