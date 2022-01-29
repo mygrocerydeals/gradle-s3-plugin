@@ -9,6 +9,7 @@ import com.amazonaws.event.ProgressEvent
 import com.amazonaws.event.ProgressListener
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.transfer.Download
 import com.amazonaws.services.s3.transfer.Transfer
 import com.amazonaws.services.s3.transfer.TransferManager
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder
@@ -20,6 +21,8 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.Optional
 
@@ -171,7 +174,7 @@ class S3Download extends S3Task {
     Iterable<String> keys
 
     @Optional
-    @Input
+    @OutputFile
     @Deprecated
     String file
 
@@ -181,7 +184,7 @@ class S3Download extends S3Task {
     String keyPrefix
 
     @Optional
-    @Input
+    @OutputDirectory
     String destDir
 
     @TaskAction
@@ -203,8 +206,8 @@ class S3Download extends S3Task {
                 logger.quiet("S3 Download recursive s3://${bucket}/${keyPrefix} → ${project.file(destDir)}/")
                 transfers = [ manager.downloadDirectory(bucket, keyPrefix, project.file(destDir)) ]
 
-                for( Upload u : transfers.first().getSubTransfers() ) {
-                    u.addProgressListener( new AfterUploadListener( u, project.file(destDir), then ) )
+                for( Download u : transfers.first().getSubTransfers() ) {
+                    u.addProgressListener( new AfterDownloadListener( u, project.file(destDir), then ) )
                 }
             }
             // single file download
@@ -226,11 +229,13 @@ class S3Download extends S3Task {
                     if( key.contains('*') || key.endsWith('/') ) {
                         String prefix = key.replaceAll( /\*$/, '')
                         Transfer t = manager.downloadDirectory(bucket, prefix, project.file(destDir) )
-                        for( Upload u : t.getSubTransfers() ) {
-                            u.addProgressListener( new AfterUploadListener(u, project.file(destDir), then) )
+                        for( Download u : t.getSubTransfers() ) {
+                            u.addProgressListener( new AfterDownloadListener(u, project.file(destDir), then) )
                         }
                     } else {
-                        return manager.download( bucket, key, project.file(destDir) )
+                        File output = project.file("${destDir}/${key}")
+                        output.parentFile.mkdirs()
+                        return manager.download( bucket, key, output )
                     }
                 }
             } else {
@@ -240,7 +245,7 @@ class S3Download extends S3Task {
             transfers.each { Transfer transfer ->
                 def listener = new S3Listener(transfer, logger)
                 transfer.addProgressListener(listener)
-                transfer.addProgressListener( new AfterUploadListener( (Upload)transfer, project.file(file), then ) )
+                transfer.addProgressListener( new AfterDownloadListener((Download)transfer, project.file(destDir), then) )
             }
             transfers.each { Transfer transfer ->
                 transfer.waitForCompletion()
