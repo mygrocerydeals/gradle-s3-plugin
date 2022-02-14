@@ -141,7 +141,8 @@ class S3Upload extends S3Task {
                         logger.quiet("S3 Upload ${file} → s3://${bucket}/${key} with overwrite")
                         up = manager.upload(bucket, key, new File(file))
                     } else {
-                        logger.quiet("s3://${bucket}/${key} exists, not overwriting")
+                        logger.error("s3://${bucket}/${key} exists, not overwriting.  If you want to overwrite a file you must specify overwrite = true in the task.")
+                        return
                     }
                 } else {
                     logger.quiet("S3 Upload ${file} → s3://${bucket}/${key}")
