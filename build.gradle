@@ -10,7 +10,7 @@ wrapper {
 }
 
 group = 'com.fuseanalytics'
-version = '1.2.0'
+version = '1.2.1'
 
 jar {
     manifest {
