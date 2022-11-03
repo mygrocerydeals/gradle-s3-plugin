@@ -15,7 +15,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-  id 'com.fuseanalytics.gradle.s3' version '1.2.1'
+  id 'com.fuseanalytics.gradle.s3' version '1.2.3'
 }
 ```
 

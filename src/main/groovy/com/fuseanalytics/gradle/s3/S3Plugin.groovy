@@ -236,7 +236,9 @@ class S3Download extends S3Task {
             transfers.each { Transfer transfer ->
                 def listener = new S3Listener(transfer, logger)
                 transfer.addProgressListener(listener)
-                transfer.addProgressListener( new AfterDownloadListener((Download)transfer, project.file(destDir), then) )
+                if( transfer instanceof Download ) {
+                    transfer.addProgressListener( new AfterDownloadListener((Download)transfer, project.file(destDir), then) )
+                }
             }
             transfers.each { Transfer transfer ->
                 transfer.waitForCompletion()
