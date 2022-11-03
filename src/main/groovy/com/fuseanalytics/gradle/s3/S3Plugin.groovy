@@ -125,10 +125,6 @@ class S3Upload extends S3Task {
 
                 Transfer transfer = manager.uploadDirectory(bucket, keyPrefix, project.file(sourceDir), true)
 
-                for( Upload u : transfer.getSubTransfers() ) {
-                    u.addProgressListener( new AfterUploadListener( u, project.file(sourceDir), then ) )
-                }
-
                 S3Listener listener = new S3Listener(transfer, logger)
                 transfer.addProgressListener(listener)
                 transfer.waitForCompletion()
@@ -206,10 +202,6 @@ class S3Download extends S3Task {
                 }
                 logger.quiet("S3 Download recursive s3://${bucket}/${keyPrefix} → ${project.file(destDir)}/")
                 transfers = [ manager.downloadDirectory(bucket, keyPrefix, project.file(destDir)) ]
-
-                for( Download u : transfers.first().getSubTransfers() ) {
-                    u.addProgressListener( new AfterDownloadListener( u, project.file(destDir), then ) )
-                }
             }
             // single file download
             else if (key && file) {
@@ -230,9 +222,7 @@ class S3Download extends S3Task {
                     if( key.contains('*') || key.endsWith('/') ) {
                         String prefix = key.replaceAll( /\*$/, '')
                         Transfer t = manager.downloadDirectory(bucket, prefix, project.file(destDir) )
-                        for( Download u : t.getSubTransfers() ) {
-                            u.addProgressListener( new AfterDownloadListener(u, project.file(destDir), then) )
-                        }
+                        return t
                     } else {
                         File output = project.file("${destDir}/${key}")
                         output.parentFile.mkdirs()
