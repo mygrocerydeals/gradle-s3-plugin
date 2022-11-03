@@ -10,7 +10,7 @@ wrapper {
 }
 
 group = 'com.fuseanalytics'
-version = '1.2.1'
+version = '1.2.2'
 
 jar {
     manifest {
@@ -26,7 +26,7 @@ repositories {
 }
 
 ext {
-    amazonAWSVersion = '1.11.1024'
+    amazonAWSVersion = '1.12.334'
 }
 
 dependencies {
