@@ -1,16 +1,17 @@
 plugins {
     id 'java-gradle-plugin'
-    id 'com.gradle.plugin-publish' version '0.17.0'
+    id 'com.gradle.plugin-publish' version "${gradlePluginPublishVersion}"
     id 'idea'
     id 'groovy'
+    id 'com.github.ben-manes.versions' version "${versionsPluginVersion}"
 }
 
 wrapper {
-    gradleVersion = '7.3'
+    gradleVersion = gradleWrapperVersion
 }
 
 group = 'com.mgd.core'
-version = '1.1.4'
+version = mgdLibVersion
 sourceCompatibility = JavaVersion.VERSION_1_8
 
 jar {
@@ -24,10 +25,6 @@ jar {
 
 repositories {
     mavenCentral()
-}
-
-ext {
-    amazonAWSVersion = '1.12.105'
 }
 
 dependencies {
@@ -52,3 +49,28 @@ pluginBundle {
     vcsUrl = 'https://github.com/mygrocerydeals/gradle-s3-plugin'
     tags = ['aws', 's3']
 }
+
+def isNonStable = { String version ->
+    def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { it -> version.toUpperCase().contains(it) }
+    def regex = /^[0-9,.v-]+(groovy-[0-9.]+)?(-r|-jre)?$/
+    return !stableKeyword && !(version ==~ regex)
+}
+
+tasks.named("dependencyUpdates").configure {
+
+    checkForGradleUpdate = true
+
+    rejectVersionIf {
+        isNonStable(it.candidate.version)
+    }
+}
+
+task updateReadme {
+    ant.replaceregexp(match:"id 'com.mgd.core.gradle.s3' version '\\d+\\.\\d+\\.\\d+'", replace:"id 'com.mgd.core.gradle.s3' version '${mgdLibVersion}'",
+            flags:'g', byline:true) {
+        fileset(dir: '.', includes: 'README.md')
+    }
+}
+
+// Gradle task dependencies
+assemble.dependsOn updateReadme

@@ -11,7 +11,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-  id 'com.mgd.core.gradle.s3' version '1.1.4'
+  id 'com.mgd.core.gradle.s3' version '1.2.0'
 }
 ```
 
@@ -25,7 +25,7 @@ See [gradle plugin page](https://plugins.gradle.org/plugin/com.mgd.core.gradle.s
 
 ## Authentication
 
-The S3 plugin searches for credentials in the same order as the [AWS default credentials provider chain](http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html). Additionally you can specify a credentials profile to use by setting the project `s3.profile` property:
+The S3 plugin searches for credentials in the same order as the [AWS default credentials provider chain](http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html). Additionally, you can specify a credentials profile to use by setting the project `s3.profile` property:
 
 ```groovy
 s3 {
@@ -76,7 +76,7 @@ By default `S3Upload` does not overwrite the S3 object if it already exists. Set
 
 For a directory upload:
 
-  + `keyPrefix` - root S3 prefix under which to create the uploaded contents
+  + `keyPrefix` - root S3 prefix under which to create the uploaded contents *(optional, if not provided files will be uploaded to S3 bucket root)*
   + `sourceDir` - local directory containing the contents to be uploaded
 
 A directory upload will always overwrite existing content if it already exists under the specified S3 prefix.
@@ -95,7 +95,7 @@ For a single file download:
 
 For a recursive download:
 
-  + `keyPrefix` - S3 prefix of objects to download
+  + `keyPrefix` - S3 prefix of objects to download *(optional, if not provided entire S3 bucket will be downloaded)*
   + `destDir` - local directory to download objects to
 
 ***Note***:  
