@@ -10,7 +10,7 @@ wrapper {
     gradleVersion = gradleWrapperVersion
 }
 
-group = 'com.mgd.core'
+group = 'gradle.plugin.com.mgd.core'
 version = mgdLibVersion
 sourceCompatibility = JavaVersion.VERSION_1_8
 
@@ -34,20 +34,17 @@ dependencies {
 }
 
 gradlePlugin {
+    website = 'https://github.com/mygrocerydeals/gradle-s3-plugin/blob/master/README.md'
+    vcsUrl = 'https://github.com/mygrocerydeals/gradle-s3-plugin'
     plugins {
         s3Plugin {
             id = 'com.mgd.core.gradle.s3'
             displayName = 'Gradle S3 Plugin'
             description = 'Lightweight S3 upload and download plugin'
+            tags.set(['aws', 's3'])
             implementationClass = 'com.mgd.core.gradle.S3Plugin'
         }
     }
-}
-
-pluginBundle {
-    website = 'https://github.com/mygrocerydeals/gradle-s3-plugin/blob/master/README.md'
-    vcsUrl = 'https://github.com/mygrocerydeals/gradle-s3-plugin'
-    tags = ['aws', 's3']
 }
 
 def isNonStable = { String version ->
