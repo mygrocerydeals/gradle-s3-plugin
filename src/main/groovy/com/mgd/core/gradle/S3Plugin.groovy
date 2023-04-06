@@ -42,13 +42,21 @@ abstract class S3Task extends DefaultTask {
         return bucket ?: project.s3.bucket
     }
 
+    @Optional
+    @Input
+    String profile
+
+    String getProfile() {
+        return profile ?: project.s3.profile
+    }
+
     @Internal
     AmazonS3 getS3Client() {
 
         ProfileCredentialsProvider profileCreds
-        if (project.s3.profile) {
-            logger.quiet("Using AWS credentials profile: ${project.s3.profile}")
-            profileCreds = new ProfileCredentialsProvider(project.s3.profile)
+        if (profile) {
+            logger.quiet("Using AWS credentials profile: ${profile}")
+            profileCreds = new ProfileCredentialsProvider(profile)
         }
         else {
             profileCreds = new ProfileCredentialsProvider()
