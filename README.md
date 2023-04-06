@@ -35,6 +35,23 @@ s3 {
 
 Setting the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` is one way to provide your S3 credentials. See the [AWS Docs](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html) for details on credentials.
 
+Setting system properties is another way that may be useful for managing multiple tasks in the same project with distinct credentials.
+For example, suppose you want distinct tasks for uploading to both a development and production S3 bucket:
+```groovy
+['dev', 'prod'].each { stage ->
+    tasks.register("uploadToS3$stage", S3Upload) {
+        System.setProperty('aws.accessKeyId', project.ext."${stage}KeyId")
+        System.setProperty('aws.secretKey', project.ext."${stage}SecretKey")
+        dependsOn shadowJar
+
+        bucket = "mybucket"
+        key = "myArtifact.jar"
+        file = someBuildTask.archivePath
+        overwrite = true
+    }
+}
+```
+
 ## Amazon EC2 Region
 
 The `s3.region` property can optionally be set to define the Amazon EC2 region if one has not been set in the authentication profile. It can also be used to override the default region set in the AWS credentials provider. 
