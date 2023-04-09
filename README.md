@@ -11,7 +11,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-  id 'com.mgd.core.gradle.s3' version '1.2.1'
+  id 'com.mgd.core.gradle.s3' version '1.3.0'
 }
 ```
 
@@ -25,7 +25,11 @@ See [gradle plugin page](https://plugins.gradle.org/plugin/com.mgd.core.gradle.s
 
 ## Authentication
 
-The S3 plugin searches for credentials in the same order as the [AWS default credentials provider chain](http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html). Additionally, you can specify a credentials profile to use by setting the project `s3.profile` property:
+The S3 plugin searches for credentials in the same order as the [AWS default credentials provider chain](http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html). See the [AWS Docs](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html) for details on credentials.
+
+### Profiles
+You can specify a default credentials profile for the project to use by setting the project `s3.profile` property.
+These credentials will be used if no other authentication mechanism has been specified for the Gradle task.
 
 ```groovy
 s3 {
@@ -33,24 +37,34 @@ s3 {
 }
 ```
 
-Setting the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` is one way to provide your S3 credentials. See the [AWS Docs](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html) for details on credentials.
+### Environment Variables
 
-Setting system properties is another way that may be useful for managing multiple tasks in the same project with distinct credentials.
-For example, suppose you want distinct tasks for uploading to both a development and production S3 bucket:
+Setting the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` is another way to provide your S3 credentials. Settings these variables
+at the machine-level will make them available for every Gradle project to use as the default credentials.
+
+### System Properties
+
+Another way to set credentials is to set system properties at the task level. This may be useful for managing multiple tasks in the same project which each require distinct credentials.  
+For example, suppose you want distinct tasks for uploading to different S3 buckets, each with different security credentials.
+You could define different Gradle tasks (e.g. `uploadToS3Profile1`, `uploadToS3Profile2`) and map the credentials to each
+using system properties:
 ```groovy
-['dev', 'prod'].each { stage ->
-    tasks.register("uploadToS3$stage", S3Upload) {
-        System.setProperty('aws.accessKeyId', project.ext."${stage}KeyId")
-        System.setProperty('aws.secretKey', project.ext."${stage}SecretKey")
-        dependsOn shadowJar
+['Profile1', 'Profile2'].each { profile ->
+    tasks.register("uploadToS3$profile", S3Upload) {
+        // credentials injected into the project as profile1KeyId / profile1SecretKey and profile2KeyId / profile2SecretKey 
+        System.setProperty('aws.accessKeyId', project.ext."${profile.toLowerCase()}KeyId")
+        System.setProperty('aws.secretKey', project.ext."${profile.toLowerCase()}SecretKey")
 
-        bucket = "mybucket"
-        key = "myArtifact.jar"
-        file = someBuildTask.archivePath
+        bucket = 'target-bucketname'
+        key = 'artifact.jar'
+        file = "${buildDir}/libs/artifact.jar"
         overwrite = true
     }
 }
 ```
+
+Note that this example is provided for illustrative purposes only. [All passwords should be externalized, secured via access control and/or encrypted.](https://docs.gradle.org/current/userguide/authoring_maintainable_build_scripts.html#sec:avoiding_passwords_in_plain_text)
+A good option for managing secrets in build files is the [Gradle Credentials plugin](https://github.com/etiennestuder/gradle-credentials-plugin).
 
 ## Amazon EC2 Region
 
@@ -81,6 +95,7 @@ The following Gradle tasks are provided.
 
 Uploads one or more files to S3. This task has two modes of operation: single file upload and directory upload (including recursive upload of all child subdirectories). Properties that apply to both modes:
 
+  + `profile` - credentials profile to use *(optional, defaults to the project `s3` configured profile)*
   + `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket)*
 
 For a single file upload:
@@ -103,6 +118,7 @@ A directory upload will always overwrite existing content if it already exists u
 Downloads one or more S3 objects. This task has two modes of operation: single file
 download and recursive download. Properties that apply to both modes:
 
+  + `profile` - credentials profile to use *(optional, defaults to the project `s3` configured profile)*
   + `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket)*
 
 For a single file download:
@@ -134,7 +150,7 @@ import com.mgd.core.gradle.*
 ...
 
 s3 {
-    bucket = 'project.default.bucketname'
+    bucket = 'project-default-bucketname'
     region = 'us-east-1'
 }
 
@@ -144,13 +160,13 @@ task defaultFilesDownload(type: S3Download) {
 }
 
 task singleFileDownload(type: S3Download) {
-    bucket = 'task.source.bucketname'
+    bucket = 'task-source-bucketname'
     key = 'source-filename'
     file = 'target-filename'
 }
 
 task filesUpload(type: S3Upload) {
-    bucket = 'task.target.bucketname'
+    bucket = 'task-target-bucketname'
     keyPrefix = 'targetFolder'
     sourceDir = 'sourceDirectory'
 }
