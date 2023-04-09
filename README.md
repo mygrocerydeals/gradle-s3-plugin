@@ -50,7 +50,7 @@ You could define different Gradle tasks (e.g. `uploadToS3Profile1`, `uploadToS3P
 using system properties:
 ```groovy
 ['Profile1', 'Profile2'].each { profile ->
-    tasks.register("uploadToS3$profile", S3Upload) {
+    tasks.register("uploadToS3${profile}", S3Upload) {
         // credentials injected into the project as profile1KeyId / profile1SecretKey and profile2KeyId / profile2SecretKey 
         System.setProperty('aws.accessKeyId', project.ext."${profile.toLowerCase()}KeyId")
         System.setProperty('aws.secretKey', project.ext."${profile.toLowerCase()}SecretKey")
