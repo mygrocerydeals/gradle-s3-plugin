@@ -11,7 +11,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-  id 'com.mgd.core.gradle.s3' version '1.3.0'
+    id 'com.mgd.core.gradle.s3' version '1.3.0'
 }
 ```
 
@@ -82,7 +82,7 @@ The `s3.bucket` property sets a default S3 bucket that is common to all tasks. T
 
 ```groovy
 s3 {
-    bucket = 'my.default.bucketname'
+    bucket = 'my-default-bucketname'
 }
 ```
 
@@ -93,43 +93,61 @@ The following Gradle tasks are provided.
 
 ### S3Upload
 
-Uploads one or more files to S3. This task has two modes of operation: single file upload and directory upload (including recursive upload of all child subdirectories). Properties that apply to both modes:
+Uploads one or more files to S3. This task has two modes of operation: single file upload and directory upload (including recursive upload of all child subdirectories).  
+  
+Properties that apply to both modes:
 
   + `profile` - credentials profile to use *(optional, defaults to the project `s3` configured profile)*
   + `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket)*
 
-For a single file upload:
+#### Single file upload:
 
   + `key` - key of S3 object to create
   + `file` - path of file to be uploaded
-  + `overwrite` - *(optional, default is `false`)*, if `true` the S3 object is created or overwritten if it already exists.
+  + `overwrite` - *(optional, default is `false`)*, if `true` the S3 object is created or overwritten if it already exists
+  + `then` - *(optional)*, callback closure called upon completion with the java.io.File that was uploaded
 
 By default `S3Upload` does not overwrite the S3 object if it already exists. Set `overwrite` to `true` to upload the file even if it exists.
 
-For a directory upload:
+#### Directory upload:
 
   + `keyPrefix` - root S3 prefix under which to create the uploaded contents *(optional, if not provided files will be uploaded to S3 bucket root)*
   + `sourceDir` - local directory containing the contents to be uploaded
+  + `then` - *(optional)*, callback closure called upon completion with each java.io.File that was uploaded
 
 A directory upload will always overwrite existing content if it already exists under the specified S3 prefix.
 
 ### S3Download
 
-Downloads one or more S3 objects. This task has two modes of operation: single file
-download and recursive download. Properties that apply to both modes:
+Downloads one or more S3 objects. This task has three modes of operation: single file
+download, recursive download and path pattern matching.  
+  
+Properties that apply to all modes:
 
   + `profile` - credentials profile to use *(optional, defaults to the project `s3` configured profile)*
   + `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket)*
 
-For a single file download:
+#### Single file download:
 
   + `key` - key of S3 object to download
   + `file` - local path of file to save the download to
+  + `then` - *(optional)*, callback closure called upon completion with the java.io.File that was downloaded
 
-For a recursive download:
+#### Recursive download:
 
   + `keyPrefix` - S3 prefix of objects to download *(optional, if not provided entire S3 bucket will be downloaded)*
   + `destDir` - local directory to download objects to
+  + `then` - *(optional)*, callback closure called upon completion with the java.io.File that was downloaded
+
+#### Path pattern matching:
+ 
++ `pathPatterns` - a list of path patterns to match against, which can specify any combination of the following items:
+  + an individual S3 object name (e.g. `/path/to/some-file.txt`)
+  + a key prefix pointing to a folder (e.g. `/some-folder/`)  
+    **NOTE:** when specifying folders, the folder name **must** end with a trailing forward slash, (i.e. `/`), otherwise it will be treated as an object name
+  + a wildcard path pattern ending with an asterisk to search for matching folders (e.g. `/parent-folder/child-folder/folder-name-prefix-*`)
++ `destDir` - local directory to download objects into
++ `then` - *(optional)*, callback closure called upon completion with each java.io.File that was downloaded.
 
 ***Note***:  
 
@@ -163,6 +181,27 @@ task singleFileDownload(type: S3Download) {
     bucket = 'task-source-bucketname'
     key = 'source-filename'
     file = 'target-filename'
+}
+
+task downloadRecursive(type: S3Download) {
+    keyPrefix = 'recursive/sourceFolder'
+    destDir = './some/recursive/targetDirectory'
+    then = { File file ->
+        // do something with the file
+    }
+}
+
+task downloadPathPatterns(type: S3Download) {
+    bucket = 'another-task-source-bucketname'
+    pathPatterns = [
+        'path/to/filename.txt',
+        'single-folder/',
+        'matching/folder/with-prefix-names*'
+    ]
+    destDir = 'pathPatternMatches'
+    then = { File file ->
+        // do something with the file
+    }
 }
 
 task filesUpload(type: S3Upload) {
