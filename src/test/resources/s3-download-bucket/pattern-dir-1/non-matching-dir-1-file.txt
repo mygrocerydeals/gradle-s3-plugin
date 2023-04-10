@@ -1,0 +1,1 @@
+non-matching file in dir 1 contents

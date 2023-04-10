@@ -1,0 +1,1 @@
+pattern dir 1 file 1 contents

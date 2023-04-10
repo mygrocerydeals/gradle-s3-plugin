@@ -62,7 +62,7 @@ class S3Download extends AbstractS3Task {
                         throw new GradleException('Invalid parameters: [pathPatterns] cannot be combined with [keyPrefix] for S3 Download recursive')
                     }
 
-                    logger.quiet("S3 Download s3://${bucket}/${pathPatterns.join(',')} → ${destDir}")
+                    logger.quiet("S3 Download path patterns s3://${bucket}/${pathPatterns.join(',')} -> ${destDir}")
 
                     transfers = pathPatterns.collect { String pattern ->
 
@@ -83,7 +83,7 @@ class S3Download extends AbstractS3Task {
                     }
 
                     String source = "s3://${bucket}${keyPrefix ? '/' + keyPrefix : ''}"
-                    logger.quiet("S3 Download recursive ${source} → ${project.file(destDir)}/")
+                    logger.quiet("S3 Download recursive ${source} -> ${destDir}")
 
                     transfers = [manager.downloadDirectory(bucket, keyPrefix, project.file(destDir))]
                 }
@@ -96,14 +96,14 @@ class S3Download extends AbstractS3Task {
                     throw new GradleException("Invalid parameters: [${param}] is not valid for S3 Download single file")
                 }
 
-                logger.quiet("S3 Download s3://${bucket}/${key} → ${file}")
+                logger.quiet("S3 Download s3://${bucket}/${key} -> ${file}")
 
                 File f = new File(file)
                 f.parentFile.mkdirs()
                 transfers = [manager.download(bucket, key, f)]
             }
             else {
-                throw new GradleException('Invalid parameters: one of [key, file] or [keyPrefix, destDir] pairs must be specified for S3 Download')
+                throw new GradleException('Invalid parameters: one of [key, file], [keyPrefix, destDir] or [pathPatterns, destDir] pairs must be specified for S3 Download')
             }
 
             transfers.each { Transfer transfer ->

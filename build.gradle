@@ -31,6 +31,9 @@ dependencies {
     implementation gradleApi()
     implementation localGroovy()
     api group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: amazonAWSVersion
+
+    testImplementation group: 'org.spockframework', name: 'spock-core', version: spockVersion
+    testImplementation group: 'org.assertj', name: 'assertj-core', version: assertJVersion
 }
 
 gradlePlugin {
@@ -67,6 +70,10 @@ task updateReadme {
             flags:'g', byline:true) {
         fileset(dir: '.', includes: 'README.md')
     }
+}
+
+test {
+    useJUnitPlatform {}
 }
 
 // Gradle task dependencies

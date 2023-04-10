@@ -48,6 +48,7 @@ class S3Upload extends AbstractS3Task {
                 .withS3Client(s3Client)
                 .withMultipartUploadThreshold((long) (minMultipartUploadThreshold * 1024 * 1025))
                 .build()
+
         try {
             // directory upload
             if (sourceDir) {
@@ -61,7 +62,7 @@ class S3Upload extends AbstractS3Task {
                 }
 
                 String destination = "s3://${bucket}${keyPrefix ? '/' + keyPrefix : ''}"
-                logger.quiet("S3 Upload directory ${project.file(sourceDir)}/ → ${destination}")
+                logger.quiet("S3 Upload directory ${sourceDir} -> ${destination}")
 
                 Transfer transfer = manager.uploadDirectory(bucket, keyPrefix, project.file(sourceDir), true)
 
@@ -76,7 +77,7 @@ class S3Upload extends AbstractS3Task {
                     throw new GradleException('Invalid parameters: [keyPrefix] is not valid for S3 Upload single file')
                 }
 
-                String message = "S3 Upload ${file} → s3://${bucket}/${key}"
+                String message = "S3 Upload ${file} -> s3://${bucket}/${key}"
 
                 if (s3Client.doesObjectExist(bucket, key)) {
                     if (overwrite) {
