@@ -1,10 +1,6 @@
 package com.mgd.core.gradle
 
-import com.amazonaws.auth.AWSCredentialsProvider
-import com.amazonaws.auth.AWSCredentialsProviderChain
-import com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper
-import com.amazonaws.auth.EnvironmentVariableCredentialsProvider
-import com.amazonaws.auth.SystemPropertiesCredentialsProvider
+import com.amazonaws.auth.*
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
@@ -18,12 +14,16 @@ import org.gradle.api.tasks.Optional
  */
 abstract class AbstractS3Task extends DefaultTask {
 
+    private static final String BUCKET = 'bucket'
+    private static final String PROFILE = 'profile'
+    private static final String REGION = 'region'
+
     @Optional
     @Input
     String bucket
 
     String getBucket() {
-        return bucket ?: project.s3.bucket
+        return bucket ?: getS3Property(BUCKET)
     }
 
     @Optional
@@ -31,7 +31,7 @@ abstract class AbstractS3Task extends DefaultTask {
     String profile
 
     String getProfile() {
-        return profile ?: project.s3.profile
+        return profile ?: getS3Property(PROFILE)
     }
 
     @Internal
@@ -59,7 +59,7 @@ abstract class AbstractS3Task extends DefaultTask {
         AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard()
                 .withCredentials(creds)
 
-        String region = project.s3.region
+        String region = getS3Property(REGION)
         if (region) {
             builder.withRegion(region)
         }
@@ -68,4 +68,18 @@ abstract class AbstractS3Task extends DefaultTask {
     }
 
     abstract void task()
+
+    private String getS3Property(String name) {
+
+        switch (name) {
+            case BUCKET:
+                return S3Extension.properties.bucket
+            case PROFILE:
+                return S3Extension.properties.profile
+            case REGION:
+                return S3Extension.properties.region
+            default:
+                return null
+        }
+    }
 }

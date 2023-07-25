@@ -5,7 +5,36 @@ package com.mgd.core.gradle
  */
 class S3Extension {
 
-    String profile
-    String region
-    String bucket
+    private static String _profile
+    private static String _region
+    private static String _bucket
+
+    void setProfile(String profile) {
+        _profile = profile
+    }
+    String getProfile() {
+        return _profile
+    }
+
+    void setRegion(String region) {
+        _region = region
+    }
+    String getRegion() {
+        return _region
+    }
+
+    void setBucket(String bucket) {
+        _bucket = bucket
+    }
+    String getBucket() {
+        return _bucket
+    }
+
+    static Map<String, String> getProperties() {
+        return [
+                profile: _profile,
+                region: _region,
+                bucket: _bucket
+        ]
+    }
 }

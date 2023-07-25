@@ -13,7 +13,10 @@ import org.gradle.api.tasks.TaskAction
 /**
  * S3 Upload Gradle task implementation.
  */
-class S3Upload extends AbstractS3Task {
+abstract class S3Upload extends AbstractS3Task {
+
+    private String _sourceDirName
+    private File _sourceDir
 
     @Optional
     @Input
@@ -29,7 +32,13 @@ class S3Upload extends AbstractS3Task {
 
     @Optional
     @Input
-    String sourceDir
+    String getSourceDir() {
+        return _sourceDirName
+    }
+    void setSourceDir(String sourceDir) {
+        _sourceDirName = sourceDir
+        _sourceDir = project.file(sourceDir)
+    }
 
     @Input
     boolean overwrite = false
@@ -51,7 +60,7 @@ class S3Upload extends AbstractS3Task {
 
         try {
             // directory upload
-            if (sourceDir) {
+            if (_sourceDirName) {
 
                 if (key || file) {
                     throw new GradleException('Invalid parameters: [key, file] are not valid for S3 Upload directory')
@@ -62,9 +71,9 @@ class S3Upload extends AbstractS3Task {
                 }
 
                 String destination = "s3://${bucket}${keyPrefix ? '/' + keyPrefix : ''}"
-                logger.quiet("S3 Upload directory ${sourceDir} -> ${destination}")
+                logger.quiet("S3 Upload directory ${_sourceDirName} -> ${destination}")
 
-                Transfer transfer = manager.uploadDirectory(bucket, keyPrefix, project.file(sourceDir), true)
+                Transfer transfer = manager.uploadDirectory(bucket, keyPrefix, _sourceDir, true)
 
                 S3Listener listener = new S3Listener(transfer, logger)
                 transfer.addProgressListener(listener)
@@ -91,10 +100,11 @@ class S3Upload extends AbstractS3Task {
 
                 logger.quiet(message)
 
-                Upload up = manager.upload(bucket, key, new File(file))
+                File f = new File(file)
+                Upload up = manager.upload(bucket, key, f)
                 S3Listener listener = new S3Listener(up, logger)
                 up.addProgressListener(listener)
-                up.addProgressListener(new AfterUploadListener(up, project.file(file), then))
+                up.addProgressListener(new AfterUploadListener(up, f, then))
 
                 UploadResult result = up.waitForUploadResult()
                 logger.info("S3 Upload completed: s3://${result.bucketName}/${result.key}")

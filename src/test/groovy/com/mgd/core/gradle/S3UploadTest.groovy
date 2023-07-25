@@ -129,6 +129,34 @@ class S3UploadTest extends Specification {
         assertThat(keys).isEqualTo(['single-file-upload.txt'])
     }
 
+    def 'should upload single file to S3 with configuration cache enabled'() {
+
+        given:
+        String filename = "${RESOURCES_DIRECTORY}/${SINGLE_UPLOAD_FILENAME}"
+        buildFile << """
+
+            task putSingleS3FileCached(type: S3Upload)  {
+                bucket = '${s3BucketName}'
+                key = '${SINGLE_UPLOAD_FILENAME}'
+                file = '${filename}'
+            }
+        """
+
+        when:
+        BuildResult result = GradleRunner.create()
+                .withProjectDir(testProjectDir)
+                .withArguments('--configuration-cache', 'putSingleS3FileCached')
+                .withPluginClasspath()
+                .build()
+
+        then:
+        assertThat(result.output).contains("S3 Upload ${filename} -> s3://${s3BucketName}/${SINGLE_UPLOAD_FILENAME}")
+        assertThat(result.task(':putSingleS3FileCached').outcome).isEqualTo(SUCCESS)
+
+        List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
+        assertThat(keys).isEqualTo(['single-file-upload.txt'])
+    }
+
     def 'should upload directory to S3'() {
 
         given:
@@ -154,6 +182,36 @@ class S3UploadTest extends Specification {
         then:
         assertThat(result.output).contains("S3 Upload directory ${UPLOAD_DIRECTORY_NAME} -> s3://${s3BucketName}/${UPLOAD_DIRECTORY_NAME}")
         assertThat(result.task(':putS3Directory').outcome).isEqualTo(SUCCESS)
+
+        List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
+        assertThat(keys).isEqualTo(expectedKeys)
+    }
+
+    def 'should upload directory to S3 with configuration cache enabled'() {
+
+        given:
+        List<String> expectedKeys = seedUploadFiles().collect {String filename ->
+            "${UPLOAD_DIRECTORY_NAME}/${filename}".toString()
+        }
+        buildFile << """
+
+            task putS3DirectoryCached(type: S3Upload)  {
+                bucket = '${s3BucketName}'
+                sourceDir = '${UPLOAD_DIRECTORY_NAME}'
+                keyPrefix = '${UPLOAD_DIRECTORY_NAME}'
+            }
+        """
+
+        when:
+        BuildResult result = GradleRunner.create()
+                .withProjectDir(testProjectDir)
+                .withArguments('--configuration-cache', 'putS3DirectoryCached')
+                .withPluginClasspath()
+                .build()
+
+        then:
+        assertThat(result.output).contains("S3 Upload directory ${UPLOAD_DIRECTORY_NAME} -> s3://${s3BucketName}/${UPLOAD_DIRECTORY_NAME}")
+        assertThat(result.task(':putS3DirectoryCached').outcome).isEqualTo(SUCCESS)
 
         List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
         assertThat(keys).isEqualTo(expectedKeys)

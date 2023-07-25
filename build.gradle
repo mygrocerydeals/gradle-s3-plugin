@@ -12,13 +12,15 @@ wrapper {
 
 group = 'gradle.plugin.com.mgd.core'
 version = mgdLibVersion
-sourceCompatibility = JavaVersion.VERSION_1_8
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+}
 
 jar {
     manifest {
         attributes([
                 'Manifest-Version': '1.0',
-                'Build-Tag'       : "$buildTag"
+                'Build-Tag': "$buildTag"
         ])
     }
 }
@@ -50,9 +52,9 @@ gradlePlugin {
     }
 }
 
-def isNonStable = { String version ->
-    def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { it -> version.toUpperCase().contains(it) }
-    def regex = /^[0-9,.v-]+(groovy-[0-9.]+)?(-r|-jre)?$/
+Closure<Boolean> isNonStable = { String version ->
+    Boolean stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { it -> version.toUpperCase().contains(it) }
+    String regex = /^[0-9,.v-]+(groovy-[0-9.]+)?(-r|-jre)?$/
     return !stableKeyword && !(version ==~ regex)
 }
 
