@@ -45,7 +45,9 @@ gradlePlugin {
         s3Plugin {
             id = 'com.mgd.core.gradle.s3'
             displayName = 'Gradle S3 Plugin'
-            description = 'Lightweight S3 upload and download plugin'
+            description = 'Gradle plugin for uploading and downloading to AWS S3 buckets. Supports files,' +
+                    ' directories and downloads using path pattern matching. Provides callback hooks to attach' +
+                    ' script actions to file events.'
             tags.set(['aws', 's3'])
             implementationClass = 'com.mgd.core.gradle.S3Plugin'
         }
@@ -58,7 +60,7 @@ Closure<Boolean> isNonStable = { String version ->
     return !stableKeyword && !(version ==~ regex)
 }
 
-tasks.named("dependencyUpdates").configure {
+tasks.named('dependencyUpdates').configure {
 
     checkForGradleUpdate = true
 

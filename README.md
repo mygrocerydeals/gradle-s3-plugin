@@ -12,7 +12,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-    id 'com.mgd.core.gradle.s3' version '1.3.2'
+    id 'com.mgd.core.gradle.s3' version '1.3.3'
 }
 ```
 
@@ -150,22 +150,9 @@ Properties that apply to all modes:
 + `destDir` - local directory to download objects into
 + `then` - *(optional)*, callback closure called upon completion with each java.io.File that was downloaded.
 
-***Note***:  
-
-Use the fully qualified name when defining the Gradle tasks:
-
-* com.mgd.core.gradle.S3Upload  
-* com.mgd.core.gradle.S3Download  
-
-Alternatively, you can add the following `import` statement to the top of the build file to use the non-qualified names:  
-  + `import com.mgd.core.gradle.*`
-  
-  
 ### Example:
 
 ```groovy
-import com.mgd.core.gradle.*
-
 ...
 
 s3 {

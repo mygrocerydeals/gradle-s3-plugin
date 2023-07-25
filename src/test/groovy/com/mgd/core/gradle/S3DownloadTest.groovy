@@ -92,8 +92,6 @@ class S3DownloadTest extends Specification {
         }
 
         buildFile << """
-            import com.mgd.core.gradle.*
-
             plugins {
                 id 'com.mgd.core.gradle.s3'
             }

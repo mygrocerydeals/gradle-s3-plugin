@@ -84,8 +84,6 @@ class S3UploadTest extends Specification {
         }
 
         buildFile << """
-            import com.mgd.core.gradle.*
-
             plugins {
                 id 'com.mgd.core.gradle.s3'
             }
