@@ -58,7 +58,7 @@ using system properties:
 
         bucket = 'target-bucketname'
         key = 'artifact.jar'
-        file = "${buildDir}/libs/artifact.jar"
+        file = layout.buildDirectory.file('libs/artifact.jar').get().asFile
         overwrite = true
     }
 }
@@ -160,18 +160,18 @@ s3 {
     region = 'us-east-1'
 }
 
-task defaultFilesDownload(type: S3Download) {
+tasks.register('defaultFilesDownload', S3Download) {
     keyPrefix = 'sourceFolder'
     destDir = 'targetDirectory'
 }
 
-task singleFileDownload(type: S3Download) {
+tasks.register('singleFileDownload', S3Download) {
     bucket = 'task-source-bucketname'
     key = 'source-filename'
     file = 'target-filename'
 }
 
-task downloadRecursive(type: S3Download) {
+tasks.register('downloadRecursive', S3Download) {
     keyPrefix = 'recursive/sourceFolder'
     destDir = './some/recursive/targetDirectory'
     then = { File file ->
@@ -179,7 +179,7 @@ task downloadRecursive(type: S3Download) {
     }
 }
 
-task downloadPathPatterns(type: S3Download) {
+tasks.register('downloadPathPatterns', S3Download) {
     bucket = 'another-task-source-bucketname'
     pathPatterns = [
         'path/to/filename.txt',
@@ -192,13 +192,13 @@ task downloadPathPatterns(type: S3Download) {
     }
 }
 
-task filesUpload(type: S3Upload) {
+tasks.register('filesUpload', S3Upload) {
     bucket = 'task-target-bucketname'
     keyPrefix = 'targetFolder'
     sourceDir = 'sourceDirectory'
 }
 
-task defaultSingleFileUpload(type: S3Upload) {
+tasks.register('defaultSingleFileUpload', S3Upload) {
     key = 'target-filename'
     file = 'source-filename'
 }
@@ -217,7 +217,7 @@ top/README
 a recursive download:
 
 ```groovy
-task downloadRecursive(type: S3Download) {
+tasks.register('downloadRecursive', S3Download) {
   keyPrefix = 'top/foo/'
   destDir = 'local-dir'
 }
@@ -240,14 +240,17 @@ For example:
 String s3PathTree = 'path/to/source/location'
 String tempDownloadRoot = 'temp-download-root'
 
-task downloadRecursive(type: S3Download) {
+tasks.register('downloadRecursive', S3Download) {
     bucket = 's3-bucket-name'
     keyPrefix = "${s3PathTree}"
     destDir = layout.buildDirectory.dir(tempDownloadRoot).get().asFile
 }
 
 // prune and re-root the downloaded tree, removing the keyPrefix
-task copyDownload(type: Copy, dependsOn: downloadRecursive) {
+tasks.register('pruneDownload', Copy) {
+
+    dependsOn(tasks.downloadRecursive)
+
     from layout.buildDirectory.dir("${tempDownloadRoot}/${s3PathTree}")
     into layout.buildDirectory.dir('path/to/destination')
 }
