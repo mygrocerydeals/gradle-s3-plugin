@@ -19,8 +19,8 @@ java {
 jar {
     manifest {
         attributes([
-                'Manifest-Version': '1.0',
-                'Build-Tag': "$buildTag"
+            'Manifest-Version': '1.0',
+            'Build-Tag': "${buildTag}"
         ])
     }
 }
@@ -69,9 +69,10 @@ tasks.named('dependencyUpdates').configure {
     }
 }
 
-task updateReadme {
-    ant.replaceregexp(match:"id 'com.mgd.core.gradle.s3' version '\\d+\\.\\d+\\.\\d+'", replace:"id 'com.mgd.core.gradle.s3' version '${mgdLibVersion}'",
-            flags:'g', byline:true) {
+tasks.register('updateReadme') {
+
+    ant.replaceregexp(match: "id 'com.mgd.core.gradle.s3' version '\\d+\\.\\d+\\.\\d+'", replace: "id 'com.mgd.core.gradle.s3' version '${mgdLibVersion}'",
+            flags: 'g', byline: true) {
         fileset(dir: '.', includes: 'README.md')
     }
 }

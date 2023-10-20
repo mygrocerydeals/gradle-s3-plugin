@@ -12,7 +12,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-    id 'com.mgd.core.gradle.s3' version '1.3.3'
+    id 'com.mgd.core.gradle.s3' version '1.3.4'
 }
 ```
 
@@ -237,18 +237,19 @@ So only files under `top/foo` are downloaded, but their full S3 paths are append
 For example:
 
 ```groovy
-def localTree = 'path/to/some/location'
+String s3PathTree = 'path/to/source/location'
+String tempDownloadRoot = 'temp-download-root'
 
 task downloadRecursive(type: S3Download) {
     bucket = 's3-bucket-name'
-    keyPrefix = "${localTree}"
-    destDir = "${buildDir}/download-root"
+    keyPrefix = "${s3PathTree}"
+    destDir = layout.buildDirectory.dir(tempDownloadRoot).get().asFile
 }
 
 // prune and re-root the downloaded tree, removing the keyPrefix
 task copyDownload(type: Copy, dependsOn: downloadRecursive) {
-    from "${buildDir}/download-root/${localTree}"
-    into "${buildDir}/pruned-tree"
+    from layout.buildDirectory.dir("${tempDownloadRoot}/${s3PathTree}")
+    into layout.buildDirectory.dir('path/to/destination')
 }
 ```
 
