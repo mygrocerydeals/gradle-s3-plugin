@@ -1,0 +1,27 @@
+name: Build and Test PR
+
+on:
+  pull_request:
+
+env:
+  JAVA_VERSION: '18'
+  JAVA_DISTRIBUTION: 'corretto'
+  GRADLE_VERSION: 8.4
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+      - name: Gradle Build and Test
+        run: ./gradlew build --scan
