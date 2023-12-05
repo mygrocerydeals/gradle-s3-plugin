@@ -4,6 +4,7 @@ plugins {
     id 'idea'
     id 'groovy'
     id 'com.github.ben-manes.versions' version "${versionsPluginVersion}"
+    id 'net.researchgate.release' version "${versionIncrementPluginVersion}"
 }
 
 wrapper {
@@ -11,7 +12,7 @@ wrapper {
 }
 
 group = 'gradle.plugin.com.mgd.core'
-version = mgdLibVersion
+
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
 }
@@ -71,7 +72,7 @@ tasks.named('dependencyUpdates').configure {
 
 tasks.register('updateReadme') {
 
-    ant.replaceregexp(match: "id 'com.mgd.core.gradle.s3' version '\\d+\\.\\d+\\.\\d+'", replace: "id 'com.mgd.core.gradle.s3' version '${mgdLibVersion}'",
+    ant.replaceregexp(match: "id 'com.mgd.core.gradle.s3' version '\\d+\\.\\d+\\.\\d+'", replace: "id 'com.mgd.core.gradle.s3' version '${version}'",
             flags: 'g', byline: true) {
         fileset(dir: '.', includes: 'README.md')
     }
@@ -79,6 +80,17 @@ tasks.register('updateReadme') {
 
 test {
     useJUnitPlatform {}
+}
+
+// configuration for auto version increment plugin
+release {
+    tagTemplate = 'v$version'
+    newVersionCommitMessage = '[skip ci] set version to: '
+    failOnCommitNeeded = false
+    failOnUnversionedFiles = false
+    git {
+        release.git.requireBranch.set('master')
+    }
 }
 
 // configuration for gradle enterprise plugin to publish build scan
