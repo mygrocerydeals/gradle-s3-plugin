@@ -67,6 +67,16 @@ using system properties:
 Note that this example is provided for illustrative purposes only. [All passwords should be externalized, secured via access control and/or encrypted.](https://docs.gradle.org/current/userguide/authoring_maintainable_build_scripts.html#sec:avoiding_passwords_in_plain_text)
 A good option for managing secrets in build files is the [Gradle Credentials plugin](https://github.com/etiennestuder/gradle-credentials-plugin).
 
+## Amazon EC2 Compatible endpoint
+The `s3.endpoint` property can optionally be set to define the Amazon EC2 compatible cloud. Only will apply if you provide the `s3.region` property
+
+```groovy
+s3 {
+    endpoint = 'http://localstack.cloud'
+    region = 'global'
+}
+```
+
 ## Amazon EC2 Region
 
 The `s3.region` property can optionally be set to define the Amazon EC2 region if one has not been set in the authentication profile. It can also be used to override the default region set in the AWS credentials provider. 
@@ -157,6 +167,7 @@ Properties that apply to all modes:
 
 s3 {
     bucket = 'project-default-bucketname'
+    endpoint = 'http://localstack.cloud'
     region = 'us-east-1'
 }
 

@@ -6,6 +6,7 @@ package com.mgd.core.gradle
 class S3Extension {
 
     private static String _profile
+    private static String _endpoint
     private static String _region
     private static String _bucket
 
@@ -14,6 +15,13 @@ class S3Extension {
     }
     String getProfile() {
         return _profile
+    }
+
+    void setEndpoint(String endpoint) {
+        _endpoint = endpoint
+    }
+    String getEndpoint() {
+        return _endpoint
     }
 
     void setRegion(String region) {
@@ -33,6 +41,7 @@ class S3Extension {
     static Map<String, String> getProperties() {
         return [
                 profile: _profile,
+                endpoint: _endpoint,
                 region: _region,
                 bucket: _bucket
         ]
