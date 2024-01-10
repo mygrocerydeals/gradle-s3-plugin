@@ -1,28 +1,14 @@
 package com.mgd.core.gradle
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider
-import com.amazonaws.auth.BasicAWSCredentials
-import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.DeleteObjectsRequest
 import groovy.io.FileType
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
-import org.testcontainers.containers.localstack.LocalStackContainer
-import org.testcontainers.spock.Testcontainers
-import org.testcontainers.utility.DockerImageName
-import spock.lang.Shared
-import spock.lang.Specification
-
-import java.text.SimpleDateFormat
 
 import static org.assertj.core.api.Assertions.assertThat
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
-import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3
 
-@Testcontainers
-class S3UploadTest extends Specification {
+class S3UploadTest extends LocalStackSpecification {
 
     static final String BUILD_FILE = 'build.gradle'
     static final String SETTINGS_FILE = 'settings.gradle'
@@ -31,42 +17,13 @@ class S3UploadTest extends Specification {
 
     static final String SINGLE_UPLOAD_FILENAME = 'single-file-upload.txt'
     static final String UPLOAD_DIRECTORY_NAME = 'directory-upload'
-    
+
     static File testProjectDir
-    static String defaultEndpoint
-    static String defaultRegion
-    static String s3BucketName
-    static String accessKeyId
-    static String secretKey
-    static AmazonS3 s3Client
 
     File buildFile
     File settingsFile
-
-    @Shared
-    LocalStackContainer localStack = new LocalStackContainer(
-            DockerImageName.parse("localstack/localstack:3.0.2")
-    )
-
+    
     def setupSpec() {
-        SimpleDateFormat df = new SimpleDateFormat('yyyy-MM-dd-HHmmss')
-        s3BucketName = "gradle-s3-plugin-upload-test-${df.format(new Date())}"
-
-        localStack.execInContainer("awslocal", "s3", "mb", "s3://" + s3BucketName)
-
-        defaultEndpoint = localStack.getEndpointOverride(S3).toString()
-        defaultRegion = localStack.getRegion()
-        accessKeyId = localStack.getAccessKey()
-        secretKey = localStack.getSecretKey()
-
-        s3Client = AmazonS3ClientBuilder.standard()
-                .withEndpointConfiguration(new EndpointConfiguration(defaultEndpoint, defaultRegion))
-                .withCredentials(
-                        new AWSStaticCredentialsProvider(
-                                new BasicAWSCredentials(localStack.getAccessKey(), localStack.getSecretKey())
-                        )
-                ).build()
-
         testProjectDir = new File(PROJECT_DIRECTORY)
         if (testProjectDir.exists()) {
             testProjectDir.deleteDir()
@@ -84,9 +41,6 @@ class S3UploadTest extends Specification {
            s3Client.deleteObjects(new DeleteObjectsRequest(s3BucketName)
                 .withKeys(keys.collect { new DeleteObjectsRequest.KeyVersion(it) }))
         }
-
-        // latency to give S3 time to propagate the command
-        sleep(500)
 
         [buildFile, settingsFile].each { File file ->
             if (file.exists()) {

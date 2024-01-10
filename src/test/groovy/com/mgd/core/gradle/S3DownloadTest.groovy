@@ -1,27 +1,13 @@
 package com.mgd.core.gradle
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider
-import com.amazonaws.auth.BasicAWSCredentials
-import com.amazonaws.client.builder.AwsClientBuilder
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import groovy.io.FileType
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
-import org.testcontainers.containers.localstack.LocalStackContainer
-import org.testcontainers.spock.Testcontainers
-import org.testcontainers.utility.DockerImageName
-import spock.lang.Shared
-import spock.lang.Specification
-
-import java.text.SimpleDateFormat
 
 import static org.assertj.core.api.Assertions.assertThat
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
-import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3
 
-@Testcontainers
-class S3DownloadTest extends Specification {
+class S3DownloadTest extends LocalStackSpecification {
 
     static final String BUILD_FILE = 'build.gradle'
     static final String SETTINGS_FILE = 'settings.gradle'
@@ -35,43 +21,14 @@ class S3DownloadTest extends Specification {
     static final String SINGLE_DIRECTORY_NAME = 'single-directory'
     static final String DIRECTORY_MATCHING_PATTERN = 'pattern-dir-1*'
     static final String FILE_MATCHING_PATTERN = 'pattern-dir-2/pattern*'
-    
+
     static File testProjectDir
-    static String defaultEndpoint
-    static String defaultRegion
-    static String s3BucketName
-    static String accessKeyId
-    static String secretKey
-    static AmazonS3 s3Client
 
     File singleDownloadFile = new File(SINGLE_DOWNLOAD_FILENAME)
     File buildFile
     File settingsFile
 
-    @Shared
-    LocalStackContainer localStack = new LocalStackContainer(
-            DockerImageName.parse("localstack/localstack:3.0.2")
-    )
-
     def setupSpec() {
-        SimpleDateFormat df = new SimpleDateFormat('yyyy-MM-dd-HHmmss')
-        s3BucketName = "gradle-s3-plugin-download-test-${df.format(new Date())}"
-
-        localStack.execInContainer("awslocal", "s3", "mb", "s3://" + s3BucketName)
-
-        defaultEndpoint = localStack.getEndpointOverride(S3).toString()
-        defaultRegion = localStack.getRegion()
-        accessKeyId = localStack.getAccessKey()
-        secretKey = localStack.getSecretKey()
-
-        s3Client = AmazonS3ClientBuilder.standard()
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(defaultEndpoint, defaultRegion))
-                .withCredentials(
-                        new AWSStaticCredentialsProvider(
-                                new BasicAWSCredentials(localStack.getAccessKey(), localStack.getSecretKey())
-                        )
-                ).build()
-
         // unfortunately, we have to deal with platform-dependent path separators
         String parentRoot = RESOURCES_DIRECTORY.split("\\/").join(File.separator)
 
@@ -81,9 +38,6 @@ class S3DownloadTest extends Specification {
             String key = prefix ? "${prefix}/${file.name}" : file.name
             s3Client.putObject(s3BucketName, key, file)
         })
-
-        // latency to allow for the file content to be fully written to storage
-        sleep(1000)
 
         testProjectDir = new File(PROJECT_DIRECTORY)
         if (testProjectDir.exists()) {
