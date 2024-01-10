@@ -12,7 +12,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-    id 'com.mgd.core.gradle.s3' version '1.3.4'
+    id 'com.mgd.core.gradle.s3' version '1.3.5'
 }
 ```
 

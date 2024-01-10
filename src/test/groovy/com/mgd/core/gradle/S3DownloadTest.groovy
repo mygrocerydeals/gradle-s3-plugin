@@ -1,18 +1,26 @@
 package com.mgd.core.gradle
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider
+import com.amazonaws.auth.BasicAWSCredentials
+import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
-import com.amazonaws.services.s3.model.DeleteObjectsRequest
 import groovy.io.FileType
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
+import org.testcontainers.containers.localstack.LocalStackContainer
+import org.testcontainers.spock.Testcontainers
+import org.testcontainers.utility.DockerImageName
+import spock.lang.Shared
 import spock.lang.Specification
 
 import java.text.SimpleDateFormat
 
 import static org.assertj.core.api.Assertions.assertThat
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
+import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3
 
+@Testcontainers
 class S3DownloadTest extends Specification {
 
     static final String BUILD_FILE = 'build.gradle'
@@ -20,35 +28,49 @@ class S3DownloadTest extends Specification {
     static final String PROJECT_DIRECTORY = 'build/tmp/test/S3DownloadTest'
     static final String RESOURCES_DIRECTORY = 'src/test/resources/s3-download-bucket'
 
-    static final String DEFAULT_REGION = 'us-east-1'
-
     static final String DOWNLOAD_DIRECTORY_ROOT = 'download-dir-test'
+
     static final String DOWNLOAD_PATTERNS_ROOT = 'download-patterns-test'
     static final String SINGLE_DOWNLOAD_FILENAME = 'single-file.txt'
     static final String SINGLE_DIRECTORY_NAME = 'single-directory'
     static final String DIRECTORY_MATCHING_PATTERN = 'pattern-dir-1*'
     static final String FILE_MATCHING_PATTERN = 'pattern-dir-2/pattern*'
-
+    
     static File testProjectDir
+    static String defaultEndpoint
+    static String defaultRegion
     static String s3BucketName
+    static String accessKeyId
+    static String secretKey
     static AmazonS3 s3Client
 
     File singleDownloadFile = new File(SINGLE_DOWNLOAD_FILENAME)
     File buildFile
     File settingsFile
 
-    def setupSpec() {
+    @Shared
+    LocalStackContainer localStack = new LocalStackContainer(
+            DockerImageName.parse("localstack/localstack:3.0.2")
+    )
 
+    def setupSpec() {
         SimpleDateFormat df = new SimpleDateFormat('yyyy-MM-dd-HHmmss')
         s3BucketName = "gradle-s3-plugin-download-test-${df.format(new Date())}"
 
-        s3Client = AmazonS3ClientBuilder.standard()
-                        .withRegion(DEFAULT_REGION)
-                        .build()
-        s3Client.createBucket(s3BucketName)
+        localStack.execInContainer("awslocal", "s3", "mb", "s3://" + s3BucketName)
 
-        // latency to give S3 time to propagate the new bucket
-        sleep(500)
+        defaultEndpoint = localStack.getEndpointOverride(S3).toString()
+        defaultRegion = localStack.getRegion()
+        accessKeyId = localStack.getAccessKey()
+        secretKey = localStack.getSecretKey()
+
+        s3Client = AmazonS3ClientBuilder.standard()
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(defaultEndpoint, defaultRegion))
+                .withCredentials(
+                        new AWSStaticCredentialsProvider(
+                                new BasicAWSCredentials(localStack.getAccessKey(), localStack.getSecretKey())
+                        )
+                ).build()
 
         // unfortunately, we have to deal with platform-dependent path separators
         String parentRoot = RESOURCES_DIRECTORY.split("\\/").join(File.separator)
@@ -69,16 +91,6 @@ class S3DownloadTest extends Specification {
         }
     }
 
-    def cleanupSpec() {
-
-        List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
-        if (keys) {
-            s3Client.deleteObjects(new DeleteObjectsRequest(s3BucketName)
-                    .withKeys(keys.collect { new DeleteObjectsRequest.KeyVersion(it) }))
-        }
-        s3Client.deleteBucket(s3BucketName)
-    }
-
     def setup() {
 
         testProjectDir.mkdirs()
@@ -97,7 +109,8 @@ class S3DownloadTest extends Specification {
             }
             
             s3 {
-                region = '${DEFAULT_REGION}'
+                endpoint = '${defaultEndpoint}'
+                region = '${defaultRegion}'
                 bucket = '${s3BucketName}'
             }
         """
@@ -114,6 +127,8 @@ class S3DownloadTest extends Specification {
         buildFile << """
 
             task getSingleS3File(type: S3Download)  {
+                System.setProperty('aws.accessKeyId', '${accessKeyId}')
+                System.setProperty('aws.secretKey', '${secretKey}')
                 bucket = '${s3BucketName}'
                 key = '${SINGLE_DOWNLOAD_FILENAME}'
                 file = '${filename}'
@@ -143,6 +158,8 @@ class S3DownloadTest extends Specification {
         buildFile << """
 
             task getSingleS3FileCached(type: S3Download)  {
+                System.setProperty('aws.accessKeyId', '${accessKeyId}')
+                System.setProperty('aws.secretKey', '${secretKey}')
                 bucket = '${s3BucketName}'
                 key = '${SINGLE_DOWNLOAD_FILENAME}'
                 file = '${filename}'
@@ -171,6 +188,8 @@ class S3DownloadTest extends Specification {
         buildFile << """
 
             task getS3Directory(type: S3Download)  {
+                System.setProperty('aws.accessKeyId', '${accessKeyId}')
+                System.setProperty('aws.secretKey', '${secretKey}')
                 bucket = '${s3BucketName}'
                 destDir = '${DOWNLOAD_DIRECTORY_ROOT}'
                 keyPrefix = '${SINGLE_DIRECTORY_NAME}'
@@ -209,6 +228,8 @@ class S3DownloadTest extends Specification {
         buildFile << """
 
             task getS3DirectoryCached(type: S3Download)  {
+                System.setProperty('aws.accessKeyId', '${accessKeyId}')
+                System.setProperty('aws.secretKey', '${secretKey}')
                 bucket = '${s3BucketName}'
                 destDir = '${DOWNLOAD_DIRECTORY_ROOT}'
                 keyPrefix = '${SINGLE_DIRECTORY_NAME}'
@@ -252,6 +273,8 @@ class S3DownloadTest extends Specification {
         buildFile << """
 
             task getS3PathPatterns(type: S3Download)  {
+                System.setProperty('aws.accessKeyId', '${accessKeyId}')
+                System.setProperty('aws.secretKey', '${secretKey}')
                 bucket = '${s3BucketName}'
                 destDir = '${DOWNLOAD_PATTERNS_ROOT}'
                 pathPatterns = [
@@ -300,6 +323,8 @@ class S3DownloadTest extends Specification {
         buildFile << """
 
             task getS3PathPatternsCached(type: S3Download)  {
+                System.setProperty('aws.accessKeyId', '${accessKeyId}')
+                System.setProperty('aws.secretKey', '${secretKey}')
                 bucket = '${s3BucketName}'
                 destDir = '${DOWNLOAD_PATTERNS_ROOT}'
                 pathPatterns = [

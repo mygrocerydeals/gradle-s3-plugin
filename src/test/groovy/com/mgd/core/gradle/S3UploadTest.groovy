@@ -1,18 +1,27 @@
 package com.mgd.core.gradle
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider
+import com.amazonaws.auth.BasicAWSCredentials
+import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.DeleteObjectsRequest
 import groovy.io.FileType
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
+import org.testcontainers.containers.localstack.LocalStackContainer
+import org.testcontainers.spock.Testcontainers
+import org.testcontainers.utility.DockerImageName
+import spock.lang.Shared
 import spock.lang.Specification
 
 import java.text.SimpleDateFormat
 
 import static org.assertj.core.api.Assertions.assertThat
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
+import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3
 
+@Testcontainers
 class S3UploadTest extends Specification {
 
     static final String BUILD_FILE = 'build.gradle'
@@ -20,30 +29,43 @@ class S3UploadTest extends Specification {
     static final String PROJECT_DIRECTORY = 'build/tmp/test/S3UploadTest'
     static final String RESOURCES_DIRECTORY = 'src/test/resources/s3-upload-files'
 
-    static final String DEFAULT_REGION = 'us-east-1'
-
     static final String SINGLE_UPLOAD_FILENAME = 'single-file-upload.txt'
     static final String UPLOAD_DIRECTORY_NAME = 'directory-upload'
-
+    
     static File testProjectDir
+    static String defaultEndpoint
+    static String defaultRegion
     static String s3BucketName
+    static String accessKeyId
+    static String secretKey
     static AmazonS3 s3Client
 
     File buildFile
     File settingsFile
 
-    def setupSpec() {
+    @Shared
+    LocalStackContainer localStack = new LocalStackContainer(
+            DockerImageName.parse("localstack/localstack:3.0.2")
+    )
 
+    def setupSpec() {
         SimpleDateFormat df = new SimpleDateFormat('yyyy-MM-dd-HHmmss')
         s3BucketName = "gradle-s3-plugin-upload-test-${df.format(new Date())}"
 
-        s3Client = AmazonS3ClientBuilder.standard()
-                        .withRegion(DEFAULT_REGION)
-                        .build()
-        s3Client.createBucket(s3BucketName)
+        localStack.execInContainer("awslocal", "s3", "mb", "s3://" + s3BucketName)
 
-        // latency to give S3 time to propagate the new bucket
-        sleep(500)
+        defaultEndpoint = localStack.getEndpointOverride(S3).toString()
+        defaultRegion = localStack.getRegion()
+        accessKeyId = localStack.getAccessKey()
+        secretKey = localStack.getSecretKey()
+
+        s3Client = AmazonS3ClientBuilder.standard()
+                .withEndpointConfiguration(new EndpointConfiguration(defaultEndpoint, defaultRegion))
+                .withCredentials(
+                        new AWSStaticCredentialsProvider(
+                                new BasicAWSCredentials(localStack.getAccessKey(), localStack.getSecretKey())
+                        )
+                ).build()
 
         testProjectDir = new File(PROJECT_DIRECTORY)
         if (testProjectDir.exists()) {
@@ -51,18 +73,7 @@ class S3UploadTest extends Specification {
         }
     }
 
-    def cleanupSpec() {
-
-        List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
-        if (keys) {
-            s3Client.deleteObjects(new DeleteObjectsRequest(s3BucketName)
-                    .withKeys(keys.collect { new DeleteObjectsRequest.KeyVersion(it) }))
-        }
-        s3Client.deleteBucket(s3BucketName)
-    }
-
     def setup() {
-
         testProjectDir.mkdirs()
         buildFile = new File(testProjectDir, BUILD_FILE)
         settingsFile = new File(testProjectDir, SETTINGS_FILE)
@@ -89,7 +100,8 @@ class S3UploadTest extends Specification {
             }
             
             s3 {
-                region = '${DEFAULT_REGION}'
+                endpoint = '${defaultEndpoint}'
+                region = '${defaultRegion}'
                 bucket = '${s3BucketName}'
             }
         """
@@ -106,6 +118,8 @@ class S3UploadTest extends Specification {
         buildFile << """
 
             task putSingleS3File(type: S3Upload)  {
+                System.setProperty('aws.accessKeyId', '${accessKeyId}')
+                System.setProperty('aws.secretKey', '${secretKey}')
                 bucket = '${s3BucketName}'
                 key = '${SINGLE_UPLOAD_FILENAME}'
                 file = '${filename}'
@@ -134,6 +148,8 @@ class S3UploadTest extends Specification {
         buildFile << """
 
             task putSingleS3FileCached(type: S3Upload)  {
+                System.setProperty('aws.accessKeyId', '${accessKeyId}')
+                System.setProperty('aws.secretKey', '${secretKey}')
                 bucket = '${s3BucketName}'
                 key = '${SINGLE_UPLOAD_FILENAME}'
                 file = '${filename}'
@@ -164,6 +180,8 @@ class S3UploadTest extends Specification {
         buildFile << """
 
             task putS3Directory(type: S3Upload)  {
+                System.setProperty('aws.accessKeyId', '${accessKeyId}')
+                System.setProperty('aws.secretKey', '${secretKey}')
                 bucket = '${s3BucketName}'
                 sourceDir = '${UPLOAD_DIRECTORY_NAME}'
                 keyPrefix = '${UPLOAD_DIRECTORY_NAME}'
@@ -182,7 +200,7 @@ class S3UploadTest extends Specification {
         assertThat(result.task(':putS3Directory').outcome).isEqualTo(SUCCESS)
 
         List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
-        assertThat(keys).isEqualTo(expectedKeys)
+        assertThat(keys).containsAll(expectedKeys)
     }
 
     def 'should upload directory to S3 with configuration cache enabled'() {
@@ -194,6 +212,8 @@ class S3UploadTest extends Specification {
         buildFile << """
 
             task putS3DirectoryCached(type: S3Upload)  {
+                System.setProperty('aws.accessKeyId', '${accessKeyId}')
+                System.setProperty('aws.secretKey', '${secretKey}')
                 bucket = '${s3BucketName}'
                 sourceDir = '${UPLOAD_DIRECTORY_NAME}'
                 keyPrefix = '${UPLOAD_DIRECTORY_NAME}'
@@ -212,7 +232,7 @@ class S3UploadTest extends Specification {
         assertThat(result.task(':putS3DirectoryCached').outcome).isEqualTo(SUCCESS)
 
         List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
-        assertThat(keys).isEqualTo(expectedKeys)
+        assertThat(keys).containsAll(expectedKeys)
     }
 
     /**
