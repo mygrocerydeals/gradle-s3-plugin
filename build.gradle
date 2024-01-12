@@ -37,6 +37,8 @@ dependencies {
 
     testImplementation group: 'org.spockframework', name: 'spock-core', version: spockVersion
     testImplementation group: 'org.assertj', name: 'assertj-core', version: assertJVersion
+    testImplementation group: 'org.testcontainers', name: 'spock', version:  testContainsersVersion
+    testImplementation group: 'org.testcontainers', name: 'localstack', version:  testContainsersVersion
 }
 
 gradlePlugin {

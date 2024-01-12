@@ -2,6 +2,7 @@ package com.mgd.core.gradle
 
 import com.amazonaws.auth.*
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
+import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import org.gradle.api.DefaultTask
@@ -16,6 +17,7 @@ abstract class AbstractS3Task extends DefaultTask {
 
     private static final String BUCKET = 'bucket'
     private static final String PROFILE = 'profile'
+    private static final String ENDPOINT = 'endpoint'
     private static final String REGION = 'region'
 
     @Optional
@@ -61,7 +63,12 @@ abstract class AbstractS3Task extends DefaultTask {
 
         String region = getS3Property(REGION)
         if (region) {
-            builder.withRegion(region)
+            String endpoint = getS3Property(ENDPOINT)
+            if (endpoint) {
+                builder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endpoint, region))
+            } else {
+                builder.withRegion(region)
+            }
         }
 
         return builder.build()
@@ -78,6 +85,8 @@ abstract class AbstractS3Task extends DefaultTask {
                 return S3Extension.properties.profile
             case REGION:
                 return S3Extension.properties.region
+            case ENDPOINT:
+                return S3Extension.properties.endpoint
             default:
                 return null
         }

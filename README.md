@@ -12,7 +12,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-    id 'com.mgd.core.gradle.s3' version '1.3.4'
+    id 'com.mgd.core.gradle.s3' version '1.3.5'
 }
 ```
 
@@ -66,6 +66,16 @@ using system properties:
 
 Note that this example is provided for illustrative purposes only. [All passwords should be externalized, secured via access control and/or encrypted.](https://docs.gradle.org/current/userguide/authoring_maintainable_build_scripts.html#sec:avoiding_passwords_in_plain_text)
 A good option for managing secrets in build files is the [Gradle Credentials plugin](https://github.com/etiennestuder/gradle-credentials-plugin).
+
+## Amazon EC2 Compatible endpoint
+The `s3.endpoint` property can optionally be set to define the Amazon EC2 compatible cloud. Only will apply if you provide the `s3.region` property
+
+```groovy
+s3 {
+    endpoint = 'http://localstack.cloud'
+    region = 'global'
+}
+```
 
 ## Amazon EC2 Region
 
@@ -157,6 +167,7 @@ Properties that apply to all modes:
 
 s3 {
     bucket = 'project-default-bucketname'
+    endpoint = 'http://localstack.cloud'
     region = 'us-east-1'
 }
 
