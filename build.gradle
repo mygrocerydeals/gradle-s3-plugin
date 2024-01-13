@@ -37,8 +37,8 @@ dependencies {
 
     testImplementation group: 'org.spockframework', name: 'spock-core', version: spockVersion
     testImplementation group: 'org.assertj', name: 'assertj-core', version: assertJVersion
-    testImplementation group: 'org.testcontainers', name: 'spock', version:  testContainsersVersion
-    testImplementation group: 'org.testcontainers', name: 'localstack', version:  testContainsersVersion
+    testImplementation group: 'org.testcontainers', name: 'spock', version:  testContainersVersion
+    testImplementation group: 'org.testcontainers', name: 'localstack', version:  testContainersVersion
 }
 
 gradlePlugin {
@@ -50,7 +50,7 @@ gradlePlugin {
             displayName = 'Gradle S3 Plugin'
             description = 'Gradle plugin for uploading and downloading to AWS S3 buckets. Supports files,' +
                     ' directories and downloads using path pattern matching. Provides callback hooks to attach' +
-                    ' script actions to file events.'
+                    ' script actions to file events. Provides native support for third-party providers such as LocalStack.'
             tags.set(['aws', 's3'])
             implementationClass = 'com.mgd.core.gradle.S3Plugin'
         }

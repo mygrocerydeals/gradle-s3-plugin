@@ -7,7 +7,7 @@ import org.gradle.testkit.runner.GradleRunner
 import static org.assertj.core.api.Assertions.assertThat
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
-class S3DownloadTest extends LocalStackSpecification {
+class LocalStackS3DownloadTest extends LocalStackSpecification {
 
     static final String BUILD_FILE = 'build.gradle'
     static final String SETTINGS_FILE = 'settings.gradle'

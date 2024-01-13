@@ -22,6 +22,7 @@ class LocalStackSpecification extends Specification {
     private LocalStackContainer localStack = new LocalStackContainer(
         DockerImageName.parse("localstack/localstack:3.0.2")
     )
+
     static AmazonS3 s3Client
 
     static String defaultEndpoint
@@ -33,7 +34,7 @@ class LocalStackSpecification extends Specification {
     def setupSpec() {
 
         SimpleDateFormat df = new SimpleDateFormat('yyyy-MM-dd-HHmmss')
-        s3BucketName = "gradle-s3-plugin-download-test-${df.format(new Date())}"
+        s3BucketName = "gradle-s3-plugin-test-${df.format(new Date())}"
 
         localStack.execInContainer('awslocal', 's3', 'mb', "s3://$s3BucketName")
 

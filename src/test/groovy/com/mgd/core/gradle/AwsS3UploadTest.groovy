@@ -8,7 +8,7 @@ import org.gradle.testkit.runner.GradleRunner
 import static org.assertj.core.api.Assertions.assertThat
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
-class S3UploadTest extends LocalStackSpecification {
+class AwsS3UploadTest extends AwsSpecification {
 
     static final String BUILD_FILE = 'build.gradle'
     static final String SETTINGS_FILE = 'settings.gradle'
@@ -54,6 +54,7 @@ class S3UploadTest extends LocalStackSpecification {
             }
             
             s3 {
+                region = '${DEFAULT_REGION}'
                 bucket = '${s3BucketName}'
             }
         """
@@ -70,10 +71,6 @@ class S3UploadTest extends LocalStackSpecification {
         buildFile << """
 
             task putSingleS3File(type: S3Upload)  {
-                System.setProperty('aws.accessKeyId', '${accessKeyId}')
-                System.setProperty('aws.secretKey', '${secretKey}')
-                endpoint = '${defaultEndpoint}'
-                region = '${defaultRegion}'
                 bucket = '${s3BucketName}'
                 key = '${SINGLE_UPLOAD_FILENAME}'
                 file = '${filename}'
@@ -102,10 +99,6 @@ class S3UploadTest extends LocalStackSpecification {
         buildFile << """
 
             task putSingleS3FileCached(type: S3Upload)  {
-                System.setProperty('aws.accessKeyId', '${accessKeyId}')
-                System.setProperty('aws.secretKey', '${secretKey}')
-                endpoint = '${defaultEndpoint}'
-                region = '${defaultRegion}'
                 bucket = '${s3BucketName}'
                 key = '${SINGLE_UPLOAD_FILENAME}'
                 file = '${filename}'
@@ -136,10 +129,6 @@ class S3UploadTest extends LocalStackSpecification {
         buildFile << """
 
             task putS3Directory(type: S3Upload)  {
-                System.setProperty('aws.accessKeyId', '${accessKeyId}')
-                System.setProperty('aws.secretKey', '${secretKey}')
-                endpoint = '${defaultEndpoint}'
-                region = '${defaultRegion}'
                 bucket = '${s3BucketName}'
                 sourceDir = '${UPLOAD_DIRECTORY_NAME}'
                 keyPrefix = '${UPLOAD_DIRECTORY_NAME}'
@@ -158,7 +147,7 @@ class S3UploadTest extends LocalStackSpecification {
         assertThat(result.task(':putS3Directory').outcome).isEqualTo(SUCCESS)
 
         List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
-        assertThat(keys).containsAll(expectedKeys)
+        assertThat(keys).contains(*expectedKeys)
     }
 
     def 'should upload directory to S3 with configuration cache enabled'() {
@@ -170,10 +159,6 @@ class S3UploadTest extends LocalStackSpecification {
         buildFile << """
 
             task putS3DirectoryCached(type: S3Upload)  {
-                System.setProperty('aws.accessKeyId', '${accessKeyId}')
-                System.setProperty('aws.secretKey', '${secretKey}')
-                endpoint = '${defaultEndpoint}'
-                region = '${defaultRegion}'
                 bucket = '${s3BucketName}'
                 sourceDir = '${UPLOAD_DIRECTORY_NAME}'
                 keyPrefix = '${UPLOAD_DIRECTORY_NAME}'
@@ -192,7 +177,7 @@ class S3UploadTest extends LocalStackSpecification {
         assertThat(result.task(':putS3DirectoryCached').outcome).isEqualTo(SUCCESS)
 
         List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
-        assertThat(keys).containsAll(expectedKeys)
+        assertThat(keys).contains(*expectedKeys)
     }
 
     /**

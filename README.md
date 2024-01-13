@@ -12,7 +12,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-    id 'com.mgd.core.gradle.s3' version '1.3.6'
+    id 'com.mgd.core.gradle.s3' version '1.4.0'
 }
 ```
 
@@ -67,9 +67,10 @@ using system properties:
 Note that this example is provided for illustrative purposes only. [All passwords should be externalized, secured via access control and/or encrypted.](https://docs.gradle.org/current/userguide/authoring_maintainable_build_scripts.html#sec:avoiding_passwords_in_plain_text)
 A good option for managing secrets in build files is the [Gradle Credentials plugin](https://github.com/etiennestuder/gradle-credentials-plugin).
 
-## Amazon EC2 Compatible Endpoint
-The `s3.endpoint` property can be used to define an Amazon EC2 compatible third-party cloud environment for all tasks (e.g. LocalStack). This option is only valid when combined with the `region` property (either defined globally using `s3.region`
-or defined for the task using task-level properties).
+## Amazon EC2 Endpoint
+The `s3.endpoint` property can be used to define an Amazon EC2 compatible third-party cloud environment for all tasks (e.g. LocalStack).
+This option is only valid when combined with the `region` property (either defined globally using `s3.region` or defined for the task
+using task-level properties). Endpoints can also be defined on a per-task basis.
 
 ```groovy
 s3 {
@@ -78,11 +79,10 @@ s3 {
 }
 ```
 
-**NOTE:** This property can also be defined on a per-task basis (see below).
-
 ## Amazon EC2 Region
 
-The `s3.region` property can optionally be set to define the Amazon EC2 region if one has not been set in the authentication profile. It can also be used to override the default region set in the AWS credentials provider. 
+The `s3.region` property can optionally be set to define the Amazon EC2 region if one has not been set in the authentication profile.
+It can also be used to override the default region set in the AWS credentials provider. Regions can also be defined on a per-task basis.
 
 ```groovy
 s3 {
@@ -112,9 +112,9 @@ Uploads one or more files to S3. This task has two modes of operation: single fi
 Properties that apply to both modes:
 
   + `profile` - credentials profile to use *(optional, defaults to the project `s3` configured profile)*
-  + `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket)*
-  + `region` - the AWS region *(optional, defaults to the project `s3` configured profile, if any)*
-  + `endpoint` - the third-party AWS endpoint *(optional, defaults to the project `s3` configured bucket, if any)*
+  + `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket, if any)*
+  + `region` - the Amazon EC2 region *(optional, defaults to the project `s3` configured region, if any)*
+  + `endpoint` - the third-party Amazon EC2 endpoint *(optional, defaults to the project `s3` configured endpoint, if any)*
 
 #### Single file upload:
 
@@ -141,9 +141,9 @@ download, recursive download and path pattern matching.
 Properties that apply to all modes:
 
   + `profile` - credentials profile to use *(optional, defaults to the project `s3` configured profile)*
-  + `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket)*
-  + `region` - the AWS region *(optional, defaults to the project `s3` configured profile, if any)*
-  + `endpoint` - the third-party AWS endpoint *(optional, defaults to the project `s3` configured bucket, if any)*
+  + `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket, if any)*
+  + `region` - the Amazon EC2 region *(optional, defaults to the project `s3` configured region, if any)*
+  + `endpoint` - the third-party Amazon EC2 endpoint *(optional, defaults to the project `s3` configured endpoint, if any)*
 
 #### Single file download:
 
