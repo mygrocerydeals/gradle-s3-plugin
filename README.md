@@ -12,7 +12,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-    id 'com.mgd.core.gradle.s3' version '1.3.5'
+    id 'com.mgd.core.gradle.s3' version '1.3.6'
 }
 ```
 
@@ -67,8 +67,9 @@ using system properties:
 Note that this example is provided for illustrative purposes only. [All passwords should be externalized, secured via access control and/or encrypted.](https://docs.gradle.org/current/userguide/authoring_maintainable_build_scripts.html#sec:avoiding_passwords_in_plain_text)
 A good option for managing secrets in build files is the [Gradle Credentials plugin](https://github.com/etiennestuder/gradle-credentials-plugin).
 
-## Amazon EC2 Compatible endpoint
-The `s3.endpoint` property can optionally be set to define the Amazon EC2 compatible cloud. Only will apply if you provide the `s3.region` property
+## Amazon EC2 Compatible Endpoint
+The `s3.endpoint` property can be used to define an Amazon EC2 compatible third-party cloud environment for all tasks (e.g. LocalStack). This option is only valid when combined with the `region` property (either defined globally using `s3.region`
+or defined for the task using task-level properties).
 
 ```groovy
 s3 {
@@ -76,6 +77,8 @@ s3 {
     region = 'global'
 }
 ```
+
+**NOTE:** This property can also be defined on a per-task basis (see below).
 
 ## Amazon EC2 Region
 
@@ -110,6 +113,8 @@ Properties that apply to both modes:
 
   + `profile` - credentials profile to use *(optional, defaults to the project `s3` configured profile)*
   + `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket)*
+  + `region` - the AWS region *(optional, defaults to the project `s3` configured profile, if any)*
+  + `endpoint` - the third-party AWS endpoint *(optional, defaults to the project `s3` configured bucket, if any)*
 
 #### Single file upload:
 
@@ -137,6 +142,8 @@ Properties that apply to all modes:
 
   + `profile` - credentials profile to use *(optional, defaults to the project `s3` configured profile)*
   + `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket)*
+  + `region` - the AWS region *(optional, defaults to the project `s3` configured profile, if any)*
+  + `endpoint` - the third-party AWS endpoint *(optional, defaults to the project `s3` configured bucket, if any)*
 
 #### Single file download:
 

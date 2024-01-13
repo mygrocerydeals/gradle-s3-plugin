@@ -31,6 +31,7 @@ class LocalStackSpecification extends Specification {
   static String secretKey
 
   def setupSpec() {
+
     SimpleDateFormat df = new SimpleDateFormat('yyyy-MM-dd-HHmmss')
     s3BucketName = "gradle-s3-plugin-download-test-${df.format(new Date())}"
 

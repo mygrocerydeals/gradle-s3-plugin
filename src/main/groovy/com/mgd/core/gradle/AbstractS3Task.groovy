@@ -6,6 +6,7 @@ import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
@@ -36,6 +37,22 @@ abstract class AbstractS3Task extends DefaultTask {
         return profile ?: getS3Property(PROFILE)
     }
 
+    @Optional
+    @Input
+    String endpoint
+
+    String getEndpoint() {
+        return endpoint ?: getS3Property(ENDPOINT)
+    }
+
+    @Optional
+    @Input
+    String region
+
+    String getRegion() {
+        return region ?: getS3Property(REGION)
+    }
+
     @Internal
     Closure<Void> then
 
@@ -61,14 +78,16 @@ abstract class AbstractS3Task extends DefaultTask {
         AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard()
                 .withCredentials(creds)
 
-        String region = getS3Property(REGION)
         if (region) {
-            String endpoint = getS3Property(ENDPOINT)
             if (endpoint) {
                 builder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endpoint, region))
-            } else {
+            }
+            else {
                 builder.withRegion(region)
             }
+        }
+        else if (endpoint) {
+            throw new GradleException('Invalid parameters: [endpoint] is not valid without a provided [region]')
         }
 
         return builder.build()
