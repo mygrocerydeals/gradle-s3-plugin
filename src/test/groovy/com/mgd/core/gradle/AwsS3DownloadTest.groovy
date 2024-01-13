@@ -7,58 +7,20 @@ import org.gradle.testkit.runner.GradleRunner
 import static org.assertj.core.api.Assertions.assertThat
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
+/**
+ * Spock test specification for Gradle S3 Download tasks configured for the AWS EC2 cloud.
+ */
 class AwsS3DownloadTest extends AwsSpecification {
 
-    static final String BUILD_FILE = 'build.gradle'
-    static final String SETTINGS_FILE = 'settings.gradle'
-    static final String PROJECT_DIRECTORY = 'build/tmp/test/S3DownloadTest'
-    static final String RESOURCES_DIRECTORY = 'src/test/resources/s3-download-bucket'
-
-    static final String DOWNLOAD_DIRECTORY_ROOT = 'download-dir-test'
-
-    static final String DOWNLOAD_PATTERNS_ROOT = 'download-patterns-test'
-    static final String SINGLE_DOWNLOAD_FILENAME = 'single-file.txt'
-    static final String SINGLE_DIRECTORY_NAME = 'single-directory'
-    static final String DIRECTORY_MATCHING_PATTERN = 'pattern-dir-1*'
-    static final String FILE_MATCHING_PATTERN = 'pattern-dir-2/pattern*'
-
-    static File testProjectDir
-
-    File singleDownloadFile = new File(SINGLE_DOWNLOAD_FILENAME)
-    File buildFile
-    File settingsFile
-
     def setupSpec() {
-        // unfortunately, we have to deal with platform-dependent path separators
-        String parentRoot = RESOURCES_DIRECTORY.split("\\/").join(File.separator)
 
-        File resourceDir = new File(RESOURCES_DIRECTORY)
-        resourceDir.eachFileRecurse(FileType.FILES, { File file ->
-            String prefix = file.parent.replace(parentRoot, '').replace(File.separator, '')
-            String key = prefix ? "${prefix}/${file.name}" : file.name
-            s3Client.putObject(s3BucketName, key, file)
-        })
-
-        // latency to allow for the file content to be fully written to storage
-        sleep(1000)
-
-        testProjectDir = new File(PROJECT_DIRECTORY)
-        if (testProjectDir.exists()) {
-            testProjectDir.deleteDir()
-        }
+        seedS3DownloadBuckets(true)
+        initializeTestProjectDirectory(DOWNLOAD_PROJECT_DIRECTORY)
     }
 
     def setup() {
 
-        testProjectDir.mkdirs()
-        buildFile = new File(testProjectDir, BUILD_FILE)
-        settingsFile = new File(testProjectDir, SETTINGS_FILE)
-
-        [buildFile, settingsFile, singleDownloadFile].each { File file ->
-            if (file.exists()) {
-                file.delete()
-            }
-        }
+        setupProjectDirectoryFiles()
 
         buildFile << """
             plugins {
@@ -79,7 +41,7 @@ class AwsS3DownloadTest extends AwsSpecification {
     def 'should download single S3 file'() {
 
         given:
-        String filename = "${PROJECT_DIRECTORY}/${SINGLE_DOWNLOAD_FILENAME}"
+        String filename = "${DOWNLOAD_PROJECT_DIRECTORY}/${SINGLE_DOWNLOAD_FILENAME}"
         buildFile << """
 
             task getSingleS3File(type: S3Download)  {
@@ -108,7 +70,7 @@ class AwsS3DownloadTest extends AwsSpecification {
     def 'should download single S3 file with configuration cache enabled'() {
 
         given:
-        String filename = "${PROJECT_DIRECTORY}/${SINGLE_DOWNLOAD_FILENAME}"
+        String filename = "${DOWNLOAD_PROJECT_DIRECTORY}/${SINGLE_DOWNLOAD_FILENAME}"
         buildFile << """
 
             task getSingleS3FileCached(type: S3Download)  {
@@ -150,7 +112,7 @@ class AwsS3DownloadTest extends AwsSpecification {
         """
 
         when:
-        String directoryPath = "${PROJECT_DIRECTORY}/${DOWNLOAD_DIRECTORY_ROOT}"
+        String directoryPath = "${DOWNLOAD_PROJECT_DIRECTORY}/${DOWNLOAD_DIRECTORY_ROOT}"
         File file = new File(directoryPath)
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
@@ -188,7 +150,7 @@ class AwsS3DownloadTest extends AwsSpecification {
         """
 
         when:
-        String directoryPath = "${PROJECT_DIRECTORY}/${DOWNLOAD_DIRECTORY_ROOT}"
+        String directoryPath = "${DOWNLOAD_PROJECT_DIRECTORY}/${DOWNLOAD_DIRECTORY_ROOT}"
         File file = new File(directoryPath)
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
@@ -236,7 +198,7 @@ class AwsS3DownloadTest extends AwsSpecification {
         """
 
         when:
-        String directoryPath = "${PROJECT_DIRECTORY}/${DOWNLOAD_PATTERNS_ROOT}"
+        String directoryPath = "${DOWNLOAD_PROJECT_DIRECTORY}/${DOWNLOAD_PATTERNS_ROOT}"
         File file = new File(directoryPath)
         def result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
@@ -284,7 +246,7 @@ class AwsS3DownloadTest extends AwsSpecification {
         """
 
         when:
-        String directoryPath = "${PROJECT_DIRECTORY}/${DOWNLOAD_PATTERNS_ROOT}"
+        String directoryPath = "${DOWNLOAD_PROJECT_DIRECTORY}/${DOWNLOAD_PATTERNS_ROOT}"
         File file = new File(directoryPath)
         def result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
