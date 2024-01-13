@@ -18,37 +18,38 @@ import static org.testcontainers.containers.localstack.LocalStackContainer.Servi
 @Testcontainers
 class LocalStackSpecification extends Specification {
 
-  @Shared
-  private LocalStackContainer localStack = new LocalStackContainer(
-      DockerImageName.parse("localstack/localstack:3.0.2")
-  )
-  static AmazonS3 s3Client
+    @Shared
+    private LocalStackContainer localStack = new LocalStackContainer(
+        DockerImageName.parse("localstack/localstack:3.0.2")
+    )
+    static AmazonS3 s3Client
 
-  static String defaultEndpoint
-  static String defaultRegion
-  static String s3BucketName
-  static String accessKeyId
-  static String secretKey
+    static String defaultEndpoint
+    static String defaultRegion
+    static String s3BucketName
+    static String accessKeyId
+    static String secretKey
 
-  def setupSpec() {
+    def setupSpec() {
 
-    SimpleDateFormat df = new SimpleDateFormat('yyyy-MM-dd-HHmmss')
-    s3BucketName = "gradle-s3-plugin-download-test-${df.format(new Date())}"
+        SimpleDateFormat df = new SimpleDateFormat('yyyy-MM-dd-HHmmss')
+        s3BucketName = "gradle-s3-plugin-download-test-${df.format(new Date())}"
 
-    localStack.execInContainer('awslocal', 's3', 'mb', "s3://$s3BucketName")
+        localStack.execInContainer('awslocal', 's3', 'mb', "s3://$s3BucketName")
 
-    defaultEndpoint = localStack.getEndpointOverride(S3).toString()
-    defaultRegion = localStack.getRegion()
-    accessKeyId = localStack.getAccessKey()
-    secretKey = localStack.getSecretKey()
+        defaultEndpoint = localStack.getEndpointOverride(S3).toString()
+        defaultRegion = localStack.getRegion()
+        accessKeyId = localStack.getAccessKey()
+        secretKey = localStack.getSecretKey()
 
-    s3Client = AmazonS3ClientBuilder.standard()
+        s3Client = AmazonS3ClientBuilder.standard()
             .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(defaultEndpoint, defaultRegion))
             .withCredentials(
-                    new AWSStaticCredentialsProvider(
-                            new BasicAWSCredentials(localStack.getAccessKey(), localStack.getSecretKey())
-                    )
-            ).build()
-  }
+                new AWSStaticCredentialsProvider(
+                    new BasicAWSCredentials(localStack.getAccessKey(), localStack.getSecretKey())
+                )
+            )
+            .build()
+    }
 
 }

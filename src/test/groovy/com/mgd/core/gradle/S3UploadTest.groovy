@@ -54,8 +54,6 @@ class S3UploadTest extends LocalStackSpecification {
             }
             
             s3 {
-                endpoint = '${defaultEndpoint}'
-                region = '${defaultRegion}'
                 bucket = '${s3BucketName}'
             }
         """
@@ -74,6 +72,8 @@ class S3UploadTest extends LocalStackSpecification {
             task putSingleS3File(type: S3Upload)  {
                 System.setProperty('aws.accessKeyId', '${accessKeyId}')
                 System.setProperty('aws.secretKey', '${secretKey}')
+                endpoint = '${defaultEndpoint}'
+                region = '${defaultRegion}'
                 bucket = '${s3BucketName}'
                 key = '${SINGLE_UPLOAD_FILENAME}'
                 file = '${filename}'
@@ -104,6 +104,8 @@ class S3UploadTest extends LocalStackSpecification {
             task putSingleS3FileCached(type: S3Upload)  {
                 System.setProperty('aws.accessKeyId', '${accessKeyId}')
                 System.setProperty('aws.secretKey', '${secretKey}')
+                endpoint = '${defaultEndpoint}'
+                region = '${defaultRegion}'
                 bucket = '${s3BucketName}'
                 key = '${SINGLE_UPLOAD_FILENAME}'
                 file = '${filename}'
@@ -136,6 +138,8 @@ class S3UploadTest extends LocalStackSpecification {
             task putS3Directory(type: S3Upload)  {
                 System.setProperty('aws.accessKeyId', '${accessKeyId}')
                 System.setProperty('aws.secretKey', '${secretKey}')
+                endpoint = '${defaultEndpoint}'
+                region = '${defaultRegion}'
                 bucket = '${s3BucketName}'
                 sourceDir = '${UPLOAD_DIRECTORY_NAME}'
                 keyPrefix = '${UPLOAD_DIRECTORY_NAME}'
@@ -168,6 +172,8 @@ class S3UploadTest extends LocalStackSpecification {
             task putS3DirectoryCached(type: S3Upload)  {
                 System.setProperty('aws.accessKeyId', '${accessKeyId}')
                 System.setProperty('aws.secretKey', '${secretKey}')
+                endpoint = '${defaultEndpoint}'
+                region = '${defaultRegion}'
                 bucket = '${s3BucketName}'
                 sourceDir = '${UPLOAD_DIRECTORY_NAME}'
                 keyPrefix = '${UPLOAD_DIRECTORY_NAME}'

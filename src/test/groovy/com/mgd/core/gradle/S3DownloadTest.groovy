@@ -63,8 +63,6 @@ class S3DownloadTest extends LocalStackSpecification {
             }
             
             s3 {
-                endpoint = '${defaultEndpoint}'
-                region = '${defaultRegion}'
                 bucket = '${s3BucketName}'
             }
         """
@@ -83,6 +81,8 @@ class S3DownloadTest extends LocalStackSpecification {
             task getSingleS3File(type: S3Download)  {
                 System.setProperty('aws.accessKeyId', '${accessKeyId}')
                 System.setProperty('aws.secretKey', '${secretKey}')
+                endpoint = '${defaultEndpoint}'
+                region = '${defaultRegion}'
                 bucket = '${s3BucketName}'
                 key = '${SINGLE_DOWNLOAD_FILENAME}'
                 file = '${filename}'
@@ -114,6 +114,8 @@ class S3DownloadTest extends LocalStackSpecification {
             task getSingleS3FileCached(type: S3Download)  {
                 System.setProperty('aws.accessKeyId', '${accessKeyId}')
                 System.setProperty('aws.secretKey', '${secretKey}')
+                endpoint = '${defaultEndpoint}'
+                region = '${defaultRegion}'
                 bucket = '${s3BucketName}'
                 key = '${SINGLE_DOWNLOAD_FILENAME}'
                 file = '${filename}'
@@ -144,6 +146,8 @@ class S3DownloadTest extends LocalStackSpecification {
             task getS3Directory(type: S3Download)  {
                 System.setProperty('aws.accessKeyId', '${accessKeyId}')
                 System.setProperty('aws.secretKey', '${secretKey}')
+                endpoint = '${defaultEndpoint}'
+                region = '${defaultRegion}'
                 bucket = '${s3BucketName}'
                 destDir = '${DOWNLOAD_DIRECTORY_ROOT}'
                 keyPrefix = '${SINGLE_DIRECTORY_NAME}'
@@ -184,6 +188,8 @@ class S3DownloadTest extends LocalStackSpecification {
             task getS3DirectoryCached(type: S3Download)  {
                 System.setProperty('aws.accessKeyId', '${accessKeyId}')
                 System.setProperty('aws.secretKey', '${secretKey}')
+                endpoint = '${defaultEndpoint}'
+                region = '${defaultRegion}'
                 bucket = '${s3BucketName}'
                 destDir = '${DOWNLOAD_DIRECTORY_ROOT}'
                 keyPrefix = '${SINGLE_DIRECTORY_NAME}'
@@ -229,6 +235,8 @@ class S3DownloadTest extends LocalStackSpecification {
             task getS3PathPatterns(type: S3Download)  {
                 System.setProperty('aws.accessKeyId', '${accessKeyId}')
                 System.setProperty('aws.secretKey', '${secretKey}')
+                endpoint = '${defaultEndpoint}'
+                region = '${defaultRegion}'
                 bucket = '${s3BucketName}'
                 destDir = '${DOWNLOAD_PATTERNS_ROOT}'
                 pathPatterns = [
@@ -279,6 +287,8 @@ class S3DownloadTest extends LocalStackSpecification {
             task getS3PathPatternsCached(type: S3Download)  {
                 System.setProperty('aws.accessKeyId', '${accessKeyId}')
                 System.setProperty('aws.secretKey', '${secretKey}')
+                endpoint = '${defaultEndpoint}'
+                region = '${defaultRegion}'
                 bucket = '${s3BucketName}'
                 destDir = '${DOWNLOAD_PATTERNS_ROOT}'
                 pathPatterns = [
