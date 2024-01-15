@@ -49,7 +49,7 @@ abstract class S3Upload extends AbstractS3Task {
     @TaskAction
     void task() {
 
-        if (!bucket) {
+        if (!taskBucket) {
             throw new GradleException('Invalid parameters: [bucket] was not provided and/or a default was not set')
         }
 
@@ -70,10 +70,10 @@ abstract class S3Upload extends AbstractS3Task {
                     logger.quiet('Parameter [keyPrefix] was not provided: files will be uploaded to the S3 bucket root folder')
                 }
 
-                String destination = "s3://${bucket}${keyPrefix ? '/' + keyPrefix : ''}"
+                String destination = "s3://${taskBucket}${keyPrefix ? '/' + keyPrefix : ''}"
                 logger.quiet("S3 Upload directory ${_sourceDirName} -> ${destination}")
 
-                Transfer transfer = manager.uploadDirectory(bucket, keyPrefix, _sourceDir, true)
+                Transfer transfer = manager.uploadDirectory(taskBucket, keyPrefix, _sourceDir, true)
 
                 S3Listener listener = new S3Listener(transfer, logger)
                 transfer.addProgressListener(listener)
@@ -86,14 +86,14 @@ abstract class S3Upload extends AbstractS3Task {
                     throw new GradleException('Invalid parameters: [keyPrefix] is not valid for S3 Upload single file')
                 }
 
-                String message = "S3 Upload ${file} -> s3://${bucket}/${key}"
+                String message = "S3 Upload ${file} -> s3://${taskBucket}/${key}"
 
-                if (s3Client.doesObjectExist(bucket, key)) {
+                if (s3Client.doesObjectExist(taskBucket, key)) {
                     if (overwrite) {
                         message += ' with overwrite'
                     }
                     else {
-                        logger.error("s3://${bucket}/${key} exists, not overwriting. If you want to overwrite a file you must specify overwrite = true in the task.")
+                        logger.error("s3://${taskBucket}/${key} exists, not overwriting. If you want to overwrite a file you must specify overwrite = true in the task.")
                         return
                     }
                 }
@@ -101,7 +101,7 @@ abstract class S3Upload extends AbstractS3Task {
                 logger.quiet(message)
 
                 File f = new File(file)
-                Upload up = manager.upload(bucket, key, f)
+                Upload up = manager.upload(taskBucket, key, f)
                 S3Listener listener = new S3Listener(up, logger)
                 up.addProgressListener(listener)
                 up.addProgressListener(new AfterUploadListener(up, f, then))

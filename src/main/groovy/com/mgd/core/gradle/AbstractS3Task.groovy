@@ -10,57 +10,59 @@ import org.gradle.api.GradleException
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
+import org.gradle.internal.impldep.org.junit.Ignore
 
 /**
  * Abstract base class for the S3Upload and S3Download S3 Gradle plugin tasks.
  */
 abstract class AbstractS3Task extends DefaultTask {
 
-    private static final String BUCKET = 'bucket'
-    private static final String PROFILE = 'profile'
-    private static final String ENDPOINT = 'endpoint'
-    private static final String REGION = 'region'
-
+    // common Gradle task properties with default values in S3 Extension
     @Optional
     @Input
     String bucket
-
-    String getBucket() {
-        return bucket ?: getS3Property(BUCKET)
-    }
 
     @Optional
     @Input
     String profile
 
-    String getProfile() {
-        return profile ?: getS3Property(PROFILE)
-    }
-
     @Optional
     @Input
     String endpoint
-
-    String getEndpoint() {
-        return endpoint ?: getS3Property(ENDPOINT)
-    }
 
     @Optional
     @Input
     String region
 
-    String getRegion() {
+    @Internal
+    Closure<Void> then
+
+    // property getters used by tasks
+    @Internal
+    protected String getTaskBucket() {
+        return bucket ?: getS3Property(BUCKET)
+    }
+
+    @Internal
+    protected String getTaskProfile() {
+        return profile ?: getS3Property(PROFILE)
+    }
+
+    @Internal
+    protected String getTaskRegion() {
         return region ?: getS3Property(REGION)
     }
 
     @Internal
-    Closure<Void> then
+    protected String getTaskEndpoint() {
+        return endpoint ?: getS3Property(ENDPOINT)
+    }
 
     @Internal
-    AmazonS3 getS3Client() {
+    protected AmazonS3 getS3Client() {
 
         ProfileCredentialsProvider profileCreds
-        if (profile) {
+        if (taskProfile) {
             logger.quiet("Using AWS credentials profile: ${profile}")
             profileCreds = new ProfileCredentialsProvider(profile)
         }
@@ -78,23 +80,31 @@ abstract class AbstractS3Task extends DefaultTask {
         AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard()
                 .withCredentials(creds)
 
-        if (region) {
-            if (endpoint) {
-                builder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endpoint, region))
+        if (taskRegion) {
+            if (taskEndpoint) {
+                builder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(taskEndpoint, taskRegion))
             }
             else {
-                builder.withRegion(region)
+                builder.withRegion(taskRegion)
             }
         }
-        else if (endpoint) {
+        else if (taskEndpoint) {
             throw new GradleException('Invalid parameters: [endpoint] is not valid without a provided [region]')
         }
 
         return builder.build()
     }
 
+    // S3 Extension property names
+    private static final String BUCKET = 'bucket'
+    private static final String PROFILE = 'profile'
+    private static final String ENDPOINT = 'endpoint'
+    private static final String REGION = 'region'
+
+    // entry point for Gradle task
     abstract void task()
 
+    // helper method to return a named S3 Extension property
     private String getS3Property(String name) {
 
         switch (name) {

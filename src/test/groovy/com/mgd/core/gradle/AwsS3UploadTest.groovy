@@ -27,11 +27,6 @@ class AwsS3UploadTest extends AwsSpecification {
             plugins {
                 id 'com.mgd.core.gradle.s3'
             }
-            
-            s3 {
-                region = '${DEFAULT_REGION}'
-                bucket = '${s3BucketName}'
-            }
         """
 
         settingsFile << """
@@ -46,6 +41,7 @@ class AwsS3UploadTest extends AwsSpecification {
         buildFile << """
 
             task putSingleS3File(type: S3Upload)  {
+                region = '${DEFAULT_REGION}'
                 bucket = '${s3BucketName}'
                 key = '${SINGLE_UPLOAD_FILENAME}'
                 file = '${filename}'
@@ -74,6 +70,7 @@ class AwsS3UploadTest extends AwsSpecification {
         buildFile << """
 
             task putSingleS3FileCached(type: S3Upload)  {
+                region = '${DEFAULT_REGION}'
                 bucket = '${s3BucketName}'
                 key = '${SINGLE_UPLOAD_FILENAME}'
                 file = '${filename}'
@@ -104,6 +101,7 @@ class AwsS3UploadTest extends AwsSpecification {
         buildFile << """
 
             task putS3Directory(type: S3Upload)  {
+                region = '${DEFAULT_REGION}'
                 bucket = '${s3BucketName}'
                 sourceDir = '${UPLOAD_DIRECTORY_NAME}'
                 keyPrefix = '${UPLOAD_DIRECTORY_NAME}'
@@ -134,6 +132,7 @@ class AwsS3UploadTest extends AwsSpecification {
         buildFile << """
 
             task putS3DirectoryCached(type: S3Upload)  {
+                region = '${DEFAULT_REGION}'
                 bucket = '${s3BucketName}'
                 sourceDir = '${UPLOAD_DIRECTORY_NAME}'
                 keyPrefix = '${UPLOAD_DIRECTORY_NAME}'

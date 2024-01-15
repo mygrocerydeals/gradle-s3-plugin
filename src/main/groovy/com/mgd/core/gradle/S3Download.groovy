@@ -49,7 +49,7 @@ abstract class S3Download extends AbstractS3Task {
 
         List<Transfer> transfers
 
-        if (!bucket) {
+        if (!taskBucket) {
             throw new GradleException('Invalid parameters: [bucket] was not provided and/or a default was not set')
         }
 
@@ -71,7 +71,7 @@ abstract class S3Download extends AbstractS3Task {
                         throw new GradleException('Invalid parameters: [pathPatterns] cannot be combined with [keyPrefix] for S3 Download recursive')
                     }
 
-                    logger.quiet("S3 Download path patterns s3://${bucket}/${pathPatterns.join(',')} -> ${_destDirName}")
+                    logger.quiet("S3 Download path patterns s3://${taskBucket}/${pathPatterns.join(',')} -> ${_destDirName}")
 
                     // need a local value here because Groovy somehow loses the ref to _destDir in the collect{} closure
                     File dir = _destDir
@@ -79,13 +79,13 @@ abstract class S3Download extends AbstractS3Task {
 
                         if (pattern.contains('*') || pattern.endsWith('/')) {
                             String prefix = pattern.replaceAll(/\*$/, '')
-                            Transfer t = manager.downloadDirectory(bucket, prefix, dir)
+                            Transfer t = manager.downloadDirectory(taskBucket, prefix, dir)
                             return t
                         }
 
                         File f = new File(dir, pattern)
                         f.parentFile.mkdirs()
-                        return manager.download(bucket, pattern, f)
+                        return manager.download(taskBucket, pattern, f)
                     }
                 }
                 else {
@@ -93,10 +93,10 @@ abstract class S3Download extends AbstractS3Task {
                         logger.quiet('Parameter [keyPrefix] was not provided: the entire S3 bucket contents will be downloaded')
                     }
 
-                    String source = "s3://${bucket}${keyPrefix ? '/' + keyPrefix : ''}"
+                    String source = "s3://${taskBucket}${keyPrefix ? '/' + keyPrefix : ''}"
                     logger.quiet("S3 Download recursive ${source} -> ${_destDirName}")
 
-                    transfers = [manager.downloadDirectory(bucket, keyPrefix, _destDir)]
+                    transfers = [manager.downloadDirectory(taskBucket, keyPrefix, _destDir)]
                 }
             }
             // single file download
@@ -107,11 +107,11 @@ abstract class S3Download extends AbstractS3Task {
                     throw new GradleException("Invalid parameters: [${param}] is not valid for S3 Download single file")
                 }
 
-                logger.quiet("S3 Download s3://${bucket}/${key} -> ${file}")
+                logger.quiet("S3 Download s3://${taskBucket}/${key} -> ${file}")
 
                 File f = new File(file)
                 f.parentFile.mkdirs()
-                transfers = [manager.download(bucket, key, f)]
+                transfers = [manager.download(taskBucket, key, f)]
             }
             else {
                 throw new GradleException('Invalid parameters: one of [key, file], [keyPrefix, destDir] or [pathPatterns, destDir] pairs must be specified for S3 Download')

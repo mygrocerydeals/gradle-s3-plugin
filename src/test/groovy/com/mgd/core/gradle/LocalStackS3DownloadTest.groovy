@@ -26,10 +26,6 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
             plugins {
                 id 'com.mgd.core.gradle.s3'
             }
-            
-            s3 {
-                bucket = '${s3BucketName}'
-            }
         """
 
         settingsFile << """

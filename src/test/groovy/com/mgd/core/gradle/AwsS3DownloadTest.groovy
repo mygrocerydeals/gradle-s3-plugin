@@ -45,7 +45,6 @@ class AwsS3DownloadTest extends AwsSpecification {
         buildFile << """
 
             task getSingleS3File(type: S3Download)  {
-                bucket = '${s3BucketName}'
                 key = '${SINGLE_DOWNLOAD_FILENAME}'
                 file = '${filename}'
             }
@@ -74,7 +73,6 @@ class AwsS3DownloadTest extends AwsSpecification {
         buildFile << """
 
             task getSingleS3FileCached(type: S3Download)  {
-                bucket = '${s3BucketName}'
                 key = '${SINGLE_DOWNLOAD_FILENAME}'
                 file = '${filename}'
             }
@@ -102,7 +100,6 @@ class AwsS3DownloadTest extends AwsSpecification {
         buildFile << """
 
             task getS3Directory(type: S3Download)  {
-                bucket = '${s3BucketName}'
                 destDir = '${DOWNLOAD_DIRECTORY_ROOT}'
                 keyPrefix = '${SINGLE_DIRECTORY_NAME}'
                 then = { File file ->
@@ -140,7 +137,6 @@ class AwsS3DownloadTest extends AwsSpecification {
         buildFile << """
 
             task getS3DirectoryCached(type: S3Download)  {
-                bucket = '${s3BucketName}'
                 destDir = '${DOWNLOAD_DIRECTORY_ROOT}'
                 keyPrefix = '${SINGLE_DIRECTORY_NAME}'
                 then = { File file ->
@@ -183,7 +179,6 @@ class AwsS3DownloadTest extends AwsSpecification {
         buildFile << """
 
             task getS3PathPatterns(type: S3Download)  {
-                bucket = '${s3BucketName}'
                 destDir = '${DOWNLOAD_PATTERNS_ROOT}'
                 pathPatterns = [
                     '${DIRECTORY_MATCHING_PATTERN}',
@@ -231,7 +226,6 @@ class AwsS3DownloadTest extends AwsSpecification {
         buildFile << """
 
             task getS3PathPatternsCached(type: S3Download)  {
-                bucket = '${s3BucketName}'
                 destDir = '${DOWNLOAD_PATTERNS_ROOT}'
                 pathPatterns = [
                     '${DIRECTORY_MATCHING_PATTERN}',
