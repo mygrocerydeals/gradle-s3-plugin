@@ -15,17 +15,18 @@ import static org.testcontainers.containers.localstack.LocalStackContainer.Servi
  * Base Spock test specification for all tests which run against a provisioned LocalStack container.
  */
 @Testcontainers
+@SuppressWarnings('AssignmentToStaticFieldFromInstanceMethod')
 class LocalStackSpecification extends BaseSpecification {
 
     @Shared
-    private LocalStackContainer localStack = new LocalStackContainer(
-        DockerImageName.parse("localstack/localstack:3.0.2")
+    private final LocalStackContainer localStack = new LocalStackContainer(
+        DockerImageName.parse('localstack/localstack:3.0.2')
     )
 
-    static String defaultEndpoint
-    static String defaultRegion
-    static String accessKeyId
-    static String secretKey
+    protected static String defaultEndpoint
+    protected static String defaultRegion
+    protected static String accessKeyId
+    protected static String secretKey
 
     /**
      * Setup for the test run.

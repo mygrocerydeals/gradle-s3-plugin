@@ -1,6 +1,5 @@
 package com.mgd.core.gradle
 
-
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 
@@ -56,7 +55,8 @@ class AwsS3UploadTest extends AwsSpecification {
                 .build()
 
         then:
-        assertThat(result.output).contains("S3 Upload ${filename} -> s3://${s3BucketName}/${SINGLE_UPLOAD_FILENAME}")
+        String s = "S3 Upload ${filename} -> s3://${s3BucketName}/${SINGLE_UPLOAD_FILENAME}"
+        assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':putSingleS3File').outcome).isEqualTo(SUCCESS)
 
         List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
@@ -85,7 +85,8 @@ class AwsS3UploadTest extends AwsSpecification {
                 .build()
 
         then:
-        assertThat(result.output).contains("S3 Upload ${filename} -> s3://${s3BucketName}/${SINGLE_UPLOAD_FILENAME}")
+        String s = "S3 Upload ${filename} -> s3://${s3BucketName}/${SINGLE_UPLOAD_FILENAME}"
+        assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':putSingleS3FileCached').outcome).isEqualTo(SUCCESS)
 
         List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
@@ -95,7 +96,7 @@ class AwsS3UploadTest extends AwsSpecification {
     def 'should upload directory to S3'() {
 
         given:
-        List<String> expectedKeys = seedUploadFiles().collect {String filename ->
+        List<String> expectedKeys = seedUploadFiles().collect { String filename ->
             "${UPLOAD_DIRECTORY_NAME}/${filename}".toString()
         }
         buildFile << """
@@ -116,7 +117,8 @@ class AwsS3UploadTest extends AwsSpecification {
                 .build()
 
         then:
-        assertThat(result.output).contains("S3 Upload directory ${UPLOAD_DIRECTORY_NAME} -> s3://${s3BucketName}/${UPLOAD_DIRECTORY_NAME}")
+        String s = "S3 Upload directory ${UPLOAD_DIRECTORY_NAME} -> s3://${s3BucketName}/${UPLOAD_DIRECTORY_NAME}"
+        assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':putS3Directory').outcome).isEqualTo(SUCCESS)
 
         List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
@@ -126,7 +128,7 @@ class AwsS3UploadTest extends AwsSpecification {
     def 'should upload directory to S3 with configuration cache enabled'() {
 
         given:
-        List<String> expectedKeys = seedUploadFiles().collect {String filename ->
+        List<String> expectedKeys = seedUploadFiles().collect { String filename ->
             "${UPLOAD_DIRECTORY_NAME}/${filename}".toString()
         }
         buildFile << """
@@ -147,7 +149,8 @@ class AwsS3UploadTest extends AwsSpecification {
                 .build()
 
         then:
-        assertThat(result.output).contains("S3 Upload directory ${UPLOAD_DIRECTORY_NAME} -> s3://${s3BucketName}/${UPLOAD_DIRECTORY_NAME}")
+        String s = "S3 Upload directory ${UPLOAD_DIRECTORY_NAME} -> s3://${s3BucketName}/${UPLOAD_DIRECTORY_NAME}"
+        assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':putS3DirectoryCached').outcome).isEqualTo(SUCCESS)
 
         List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key

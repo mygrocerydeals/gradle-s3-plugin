@@ -1,9 +1,9 @@
 package com.mgd.core.gradle
 
-import com.amazonaws.event.ProgressEventType
-import com.amazonaws.services.s3.transfer.Upload
 import com.amazonaws.event.ProgressEvent
+import com.amazonaws.event.ProgressEventType
 import com.amazonaws.event.ProgressListener
+import com.amazonaws.services.s3.transfer.Upload
 import com.amazonaws.services.s3.transfer.model.UploadResult
 
 /**

@@ -10,7 +10,6 @@ import org.gradle.api.GradleException
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
-import org.gradle.internal.impldep.org.junit.Ignore
 
 /**
  * Abstract base class for the S3Upload and S3Download S3 Gradle plugin tasks.
@@ -36,6 +35,9 @@ abstract class AbstractS3Task extends DefaultTask {
 
     @Internal
     Closure<Void> then
+
+    // entry point for Gradle task
+    abstract void task()
 
     // property getters used by tasks
     @Internal
@@ -100,9 +102,6 @@ abstract class AbstractS3Task extends DefaultTask {
     private static final String PROFILE = 'profile'
     private static final String ENDPOINT = 'endpoint'
     private static final String REGION = 'region'
-
-    // entry point for Gradle task
-    abstract void task()
 
     // helper method to return a named S3 Extension property
     private String getS3Property(String name) {

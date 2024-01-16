@@ -10,6 +10,7 @@ import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 /**
  * Spock test specification for Gradle S3 Download tasks configured for a provisioned LocalStack instance.
  */
+@SuppressWarnings('LineLength')
 class LocalStackS3DownloadTest extends LocalStackSpecification {
 
     def setupSpec() {
@@ -59,7 +60,8 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
                 .build()
 
         then:
-        assertThat(result.output).contains("S3 Download s3://${s3BucketName}/${SINGLE_DOWNLOAD_FILENAME} -> ${filename}")
+        String s = "S3 Download s3://${s3BucketName}/${SINGLE_DOWNLOAD_FILENAME} -> ${filename}"
+        assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':getSingleS3File').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
             .isFile()
@@ -92,7 +94,8 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
                 .build()
 
         then:
-        assertThat(result.output).contains("S3 Download s3://${s3BucketName}/${SINGLE_DOWNLOAD_FILENAME} -> ${filename}")
+        String s = "S3 Download s3://${s3BucketName}/${SINGLE_DOWNLOAD_FILENAME} -> ${filename}"
+        assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':getSingleS3FileCached').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
                 .isFile()
@@ -128,16 +131,17 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
                 .build()
 
         then:
-        assertThat(result.output).contains("S3 Download recursive s3://${s3BucketName}/${SINGLE_DIRECTORY_NAME} -> ${DOWNLOAD_DIRECTORY_ROOT}")
+        String s = "S3 Download recursive s3://${s3BucketName}/${SINGLE_DIRECTORY_NAME} -> ${DOWNLOAD_DIRECTORY_ROOT}"
+        assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':getS3Directory').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
                 .isDirectory()
 
         int fileCount = 0
-        file.eachFileRecurse(FileType.FILES, { File f ->
+        file.eachFileRecurse(FileType.FILES) { File f ->
             fileCount++
             assertThat(f.name).isEqualTo('directory-file.txt')
-        })
+        }
         assertThat(fileCount).isEqualTo(1)
     }
 
@@ -170,16 +174,17 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
                 .build()
 
         then:
-        assertThat(result.output).contains("S3 Download recursive s3://${s3BucketName}/${SINGLE_DIRECTORY_NAME} -> ${DOWNLOAD_DIRECTORY_ROOT}")
+        String s = "S3 Download recursive s3://${s3BucketName}/${SINGLE_DIRECTORY_NAME} -> ${DOWNLOAD_DIRECTORY_ROOT}"
+        assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':getS3DirectoryCached').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
                 .isDirectory()
 
         int fileCount = 0
-        file.eachFileRecurse(FileType.FILES, { File f ->
+        file.eachFileRecurse(FileType.FILES) { File f ->
             fileCount++
             assertThat(f.name).isEqualTo('directory-file.txt')
-        })
+        }
         assertThat(fileCount).isEqualTo(1)
     }
 
@@ -215,23 +220,24 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
         when:
         String directoryPath = "${DOWNLOAD_PROJECT_DIRECTORY}/${DOWNLOAD_PATTERNS_ROOT}"
         File file = new File(directoryPath)
-        def result = GradleRunner.create()
+        BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments( 'getS3PathPatterns')
+                .withArguments('getS3PathPatterns')
                 .withPluginClasspath()
                 .build()
 
         then:
-        assertThat(result.output).contains("S3 Download path patterns s3://${s3BucketName}/${DIRECTORY_MATCHING_PATTERN},${FILE_MATCHING_PATTERN},${SINGLE_DIRECTORY_NAME}/,${SINGLE_DOWNLOAD_FILENAME} -> ${DOWNLOAD_PATTERNS_ROOT}")
+        String s = "S3 Download path patterns s3://${s3BucketName}/${DIRECTORY_MATCHING_PATTERN},${FILE_MATCHING_PATTERN},${SINGLE_DIRECTORY_NAME}/,${SINGLE_DOWNLOAD_FILENAME} -> ${DOWNLOAD_PATTERNS_ROOT}"
+        assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':getS3PathPatterns').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
             .isDirectory()
 
         int fileCount = 0
-        file.eachFileRecurse(FileType.FILES, { File f ->
+        file.eachFileRecurse(FileType.FILES) { File f ->
             fileCount++
             assertThat(expectedFiles).contains(f.name)
-        })
+        }
         assertThat(fileCount).isEqualTo(expectedFiles.size())
     }
 
@@ -267,23 +273,24 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
         when:
         String directoryPath = "${DOWNLOAD_PROJECT_DIRECTORY}/${DOWNLOAD_PATTERNS_ROOT}"
         File file = new File(directoryPath)
-        def result = GradleRunner.create()
+        BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
                 .withArguments('--configuration-cache', 'getS3PathPatternsCached')
                 .withPluginClasspath()
                 .build()
 
         then:
-        assertThat(result.output).contains("S3 Download path patterns s3://${s3BucketName}/${DIRECTORY_MATCHING_PATTERN},${FILE_MATCHING_PATTERN},${SINGLE_DIRECTORY_NAME}/,${SINGLE_DOWNLOAD_FILENAME} -> ${DOWNLOAD_PATTERNS_ROOT}")
+        String s = "S3 Download path patterns s3://${s3BucketName}/${DIRECTORY_MATCHING_PATTERN},${FILE_MATCHING_PATTERN},${SINGLE_DIRECTORY_NAME}/,${SINGLE_DOWNLOAD_FILENAME} -> ${DOWNLOAD_PATTERNS_ROOT}"
+        assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':getS3PathPatternsCached').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
                 .isDirectory()
 
         int fileCount = 0
-        file.eachFileRecurse(FileType.FILES, { File f ->
+        file.eachFileRecurse(FileType.FILES) { File f ->
             fileCount++
             assertThat(expectedFiles).contains(f.name)
-        })
+        }
         assertThat(fileCount).isEqualTo(expectedFiles.size())
     }
 }

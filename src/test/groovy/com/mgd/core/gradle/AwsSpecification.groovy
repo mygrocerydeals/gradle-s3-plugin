@@ -1,6 +1,5 @@
 package com.mgd.core.gradle
 
-
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 
 /**

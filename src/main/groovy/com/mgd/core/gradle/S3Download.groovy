@@ -15,8 +15,8 @@ import org.gradle.api.tasks.TaskAction
  */
 abstract class S3Download extends AbstractS3Task {
 
-    private String _destDirName
-    private File _destDir
+    private String destination
+    private File destinationDirectory
 
     @Optional
     @Input
@@ -37,11 +37,11 @@ abstract class S3Download extends AbstractS3Task {
     @Optional
     @OutputDirectory
     String getDestDir() {
-        return _destDirName
+        return destination
     }
     void setDestDir(String destDir) {
-        _destDirName = destDir
-        _destDir = project.file(destDir)
+        destination = destDir
+        destinationDirectory = project.file(destDir)
     }
 
     @TaskAction
@@ -59,7 +59,7 @@ abstract class S3Download extends AbstractS3Task {
 
         try {
             // directory download
-            if (_destDirName) {
+            if (destination) {
 
                 if (key || file) {
                     String param = key ? 'key' : 'file'
@@ -71,10 +71,10 @@ abstract class S3Download extends AbstractS3Task {
                         throw new GradleException('Invalid parameters: [pathPatterns] cannot be combined with [keyPrefix] for S3 Download recursive')
                     }
 
-                    logger.quiet("S3 Download path patterns s3://${taskBucket}/${pathPatterns.join(',')} -> ${_destDirName}")
+                    logger.quiet("S3 Download path patterns s3://${taskBucket}/${pathPatterns.join(',')} -> ${destination}")
 
-                    // need a local value here because Groovy somehow loses the ref to _destDir in the collect{} closure
-                    File dir = _destDir
+                    // need a local value here because Groovy somehow loses the ref to destinationDirectory in the collect{} closure
+                    File dir = destinationDirectory
                     transfers = pathPatterns.collect { String pattern ->
 
                         if (pattern.contains('*') || pattern.endsWith('/')) {
@@ -94,9 +94,9 @@ abstract class S3Download extends AbstractS3Task {
                     }
 
                     String source = "s3://${taskBucket}${keyPrefix ? '/' + keyPrefix : ''}"
-                    logger.quiet("S3 Download recursive ${source} -> ${_destDirName}")
+                    logger.quiet("S3 Download recursive ${source} -> ${destination}")
 
-                    transfers = [manager.downloadDirectory(taskBucket, keyPrefix, _destDir)]
+                    transfers = [manager.downloadDirectory(taskBucket, keyPrefix, destinationDirectory)]
                 }
             }
             // single file download
@@ -121,7 +121,7 @@ abstract class S3Download extends AbstractS3Task {
                 S3Listener listener = new S3Listener(transfer, logger)
                 transfer.addProgressListener(listener)
                 if (transfer.class == Download) {
-                    transfer.addProgressListener(new AfterDownloadListener((Download)transfer, _destDir, then))
+                    transfer.addProgressListener(new AfterDownloadListener((Download)transfer, destinationDirectory, then))
                 }
             }
             transfers.each { Transfer transfer ->

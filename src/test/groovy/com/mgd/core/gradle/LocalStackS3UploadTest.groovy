@@ -26,7 +26,7 @@ class LocalStackS3UploadTest extends LocalStackSpecification {
             plugins {
                 id 'com.mgd.core.gradle.s3'
             }
-            
+
             s3 {
                 endpoint = '${defaultEndpoint}'
                 region = '${defaultRegion}'
@@ -61,7 +61,8 @@ class LocalStackS3UploadTest extends LocalStackSpecification {
                 .build()
 
         then:
-        assertThat(result.output).contains("S3 Upload ${filename} -> s3://${s3BucketName}/${SINGLE_UPLOAD_FILENAME}")
+        String s = "S3 Upload ${filename} -> s3://${s3BucketName}/${SINGLE_UPLOAD_FILENAME}"
+        assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':putSingleS3File').outcome).isEqualTo(SUCCESS)
 
         List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
@@ -90,7 +91,8 @@ class LocalStackS3UploadTest extends LocalStackSpecification {
                 .build()
 
         then:
-        assertThat(result.output).contains("S3 Upload ${filename} -> s3://${s3BucketName}/${SINGLE_UPLOAD_FILENAME}")
+        String s = "S3 Upload ${filename} -> s3://${s3BucketName}/${SINGLE_UPLOAD_FILENAME}"
+        assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':putSingleS3FileCached').outcome).isEqualTo(SUCCESS)
 
         List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
@@ -100,7 +102,7 @@ class LocalStackS3UploadTest extends LocalStackSpecification {
     def 'should upload directory to S3'() {
 
         given:
-        List<String> expectedKeys = seedUploadFiles().collect {String filename ->
+        List<String> expectedKeys = seedUploadFiles().collect { String filename ->
             "${UPLOAD_DIRECTORY_NAME}/${filename}".toString()
         }
         buildFile << """
@@ -121,7 +123,8 @@ class LocalStackS3UploadTest extends LocalStackSpecification {
                 .build()
 
         then:
-        assertThat(result.output).contains("S3 Upload directory ${UPLOAD_DIRECTORY_NAME} -> s3://${s3BucketName}/${UPLOAD_DIRECTORY_NAME}")
+        String s = "S3 Upload directory ${UPLOAD_DIRECTORY_NAME} -> s3://${s3BucketName}/${UPLOAD_DIRECTORY_NAME}"
+        assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':putS3Directory').outcome).isEqualTo(SUCCESS)
 
         List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
@@ -131,7 +134,7 @@ class LocalStackS3UploadTest extends LocalStackSpecification {
     def 'should upload directory to S3 with configuration cache enabled'() {
 
         given:
-        List<String> expectedKeys = seedUploadFiles().collect {String filename ->
+        List<String> expectedKeys = seedUploadFiles().collect { String filename ->
             "${UPLOAD_DIRECTORY_NAME}/${filename}".toString()
         }
         buildFile << """
@@ -152,7 +155,8 @@ class LocalStackS3UploadTest extends LocalStackSpecification {
                 .build()
 
         then:
-        assertThat(result.output).contains("S3 Upload directory ${UPLOAD_DIRECTORY_NAME} -> s3://${s3BucketName}/${UPLOAD_DIRECTORY_NAME}")
+        String s = "S3 Upload directory ${UPLOAD_DIRECTORY_NAME} -> s3://${s3BucketName}/${UPLOAD_DIRECTORY_NAME}"
+        assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':putS3DirectoryCached').outcome).isEqualTo(SUCCESS)
 
         List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key

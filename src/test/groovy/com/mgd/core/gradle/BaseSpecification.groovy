@@ -49,7 +49,7 @@ class BaseSpecification extends Specification {
     protected static String getS3BucketName() {
 
         if (!s3BucketName) {
-            SimpleDateFormat df = new SimpleDateFormat('yyyy-MM-dd-HHmmss')
+            SimpleDateFormat df = new SimpleDateFormat('yyyy-MM-dd-HHmmssSSS', Locale.US)
             s3BucketName = "gradle-s3-plugin-test-${df.format(new Date())}"
         }
 
@@ -82,11 +82,11 @@ class BaseSpecification extends Specification {
         File resourcesDir = new File(resourcesDirectoryName)
         File projectDir = new File(projectDirectoryName)
         projectDir.mkdirs()
-        resourcesDir.eachFile(FileType.FILES, {File file ->
+        resourcesDir.eachFile(FileType.FILES) { File file ->
             File target = new File(projectDirectoryName, file.name)
             target << file.text
             filenames << file.name
-        })
+        }
 
         return filenames
     }
@@ -97,14 +97,14 @@ class BaseSpecification extends Specification {
     protected static void seedS3DownloadBuckets(boolean addLatency = false) {
 
         // unfortunately, we have to deal with platform-dependent path separators
-        String parentRoot = DOWNLOAD_RESOURCES_DIRECTORY.split("\\/").join(File.separator)
+        String parentRoot = DOWNLOAD_RESOURCES_DIRECTORY.split(/\//).join(File.separator)
 
         File resourceDir = new File(DOWNLOAD_RESOURCES_DIRECTORY)
-        resourceDir.eachFileRecurse(FileType.FILES, { File file ->
+        resourceDir.eachFileRecurse(FileType.FILES) { File file ->
             String prefix = file.parent.replace(parentRoot, '').replace(File.separator, '')
             String key = prefix ? "${prefix}/${file.name}" : file.name
             s3Client.putObject(s3BucketName, key, file)
-        })
+        }
 
         if (addLatency) {
             // latency to allow for the file content to be fully written to storage
@@ -149,5 +149,15 @@ class BaseSpecification extends Specification {
                 file.delete()
             }
         }
+    }
+
+    /**
+     * Helper method to parse an output buffer to an array of normalized strings
+     */
+    protected String[] parseOutput(String output) {
+
+        return output
+                .split(/\n/)
+                *.trim()
     }
 }

@@ -10,6 +10,7 @@ import java.text.DecimalFormat
 /**
  * Progress listener for S3 actions. Used for logging completion status.
  */
+@SuppressWarnings('UnusedMethodParameter')
 class S3Listener implements ProgressListener {
 
     DecimalFormat df = new DecimalFormat('#0.0')

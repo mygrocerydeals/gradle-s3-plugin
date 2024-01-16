@@ -3,12 +3,23 @@ package com.mgd.core.gradle
 /**
  * Model for the default project properties for the S3 plugin.
  */
+@SuppressWarnings('FieldName')
+@SuppressWarnings('AssignmentToStaticFieldFromInstanceMethod')
 class S3Extension {
 
     private static String _profile
     private static String _endpoint
     private static String _region
     private static String _bucket
+
+    static Map<String, String> getProperties() {
+        return [
+                profile: _profile,
+                endpoint: _endpoint,
+                region: _region,
+                bucket: _bucket
+        ]
+    }
 
     void setProfile(String profile) {
         _profile = profile
@@ -36,14 +47,5 @@ class S3Extension {
     }
     String getBucket() {
         return _bucket
-    }
-
-    static Map<String, String> getProperties() {
-        return [
-                profile: _profile,
-                endpoint: _endpoint,
-                region: _region,
-                bucket: _bucket
-        ]
     }
 }

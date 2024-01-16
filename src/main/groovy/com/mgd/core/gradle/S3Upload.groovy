@@ -15,8 +15,8 @@ import org.gradle.api.tasks.TaskAction
  */
 abstract class S3Upload extends AbstractS3Task {
 
-    private String _sourceDirName
-    private File _sourceDir
+    private String source
+    private File sourceDirectory
 
     @Optional
     @Input
@@ -33,11 +33,11 @@ abstract class S3Upload extends AbstractS3Task {
     @Optional
     @Input
     String getSourceDir() {
-        return _sourceDirName
+        return source
     }
     void setSourceDir(String sourceDir) {
-        _sourceDirName = sourceDir
-        _sourceDir = project.file(sourceDir)
+        source = sourceDir
+        sourceDirectory = project.file(sourceDir)
     }
 
     @Input
@@ -60,7 +60,7 @@ abstract class S3Upload extends AbstractS3Task {
 
         try {
             // directory upload
-            if (_sourceDirName) {
+            if (source) {
 
                 if (key || file) {
                     throw new GradleException('Invalid parameters: [key, file] are not valid for S3 Upload directory')
@@ -71,9 +71,9 @@ abstract class S3Upload extends AbstractS3Task {
                 }
 
                 String destination = "s3://${taskBucket}${keyPrefix ? '/' + keyPrefix : ''}"
-                logger.quiet("S3 Upload directory ${_sourceDirName} -> ${destination}")
+                logger.quiet("S3 Upload directory ${source} -> ${destination}")
 
-                Transfer transfer = manager.uploadDirectory(taskBucket, keyPrefix, _sourceDir, true)
+                Transfer transfer = manager.uploadDirectory(taskBucket, keyPrefix, sourceDirectory, true)
 
                 S3Listener listener = new S3Listener(transfer, logger)
                 transfer.addProgressListener(listener)

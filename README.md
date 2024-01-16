@@ -4,7 +4,7 @@
 [![Gradle Plugin](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com/mgd/core/gradle/s3/com.mgd.core.gradle.s3.gradle.plugin/maven-metadata.xml.svg?label=gradle)](https://plugins.gradle.org/plugin/com.mgd.core.gradle.s3)
 
 Simple Gradle plugin that uploads and downloads S3 objects. This is a fork of the [mgk/s3-plugin](https://github.com/mgk/s3-plugin), which no longer appears to be under active development.
-It has been updated to work with Gradle version 6 and later.
+It is designed to work with Gradle version 7 and later. 
 
 ## Setup
 
@@ -12,7 +12,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-    id 'com.mgd.core.gradle.s3' version '1.4.3'
+    id 'com.mgd.core.gradle.s3' version '1.4.4'
 }
 ```
 
