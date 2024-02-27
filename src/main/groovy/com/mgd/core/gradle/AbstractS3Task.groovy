@@ -1,15 +1,14 @@
 package com.mgd.core.gradle
 
-import com.amazonaws.auth.*
-import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import com.amazonaws.client.builder.AwsClientBuilder
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
+import software.amazon.awssdk.auth.credentials.*
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.S3ClientBuilder
 
 /**
  * Abstract base class for the S3Upload and S3Download S3 Gradle plugin tasks.
@@ -61,40 +60,47 @@ abstract class AbstractS3Task extends DefaultTask {
     }
 
     @Internal
-    protected AmazonS3 getS3Client() {
+    protected S3Client getS3Client() {
 
         ProfileCredentialsProvider profileCreds
         if (taskProfile) {
             logger.quiet("Using AWS credentials profile: ${profile}")
-            profileCreds = new ProfileCredentialsProvider(profile)
+            profileCreds = ProfileCredentialsProvider.create(profile)
         }
         else {
-            profileCreds = new ProfileCredentialsProvider()
+            profileCreds = ProfileCredentialsProvider.create()
         }
 
-        AWSCredentialsProvider creds = new AWSCredentialsProviderChain(
-                new EnvironmentVariableCredentialsProvider(),
-                new SystemPropertiesCredentialsProvider(),
-                profileCreds,
-                new EC2ContainerCredentialsProviderWrapper()
-        )
+        List<AwsCredentialsProvider> credentialsProviders = []
+        credentialsProviders << EnvironmentVariableCredentialsProvider.create()
+        credentialsProviders << SystemPropertyCredentialsProvider.create()
+        credentialsProviders << profileCreds
+        credentialsProviders << ContainerCredentialsProvider.builder().build()
 
-        AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard()
-                .withCredentials(creds)
+        AwsCredentialsProviderChain providerChain = AwsCredentialsProviderChain.builder()
+                .credentialsProviders(credentialsProviders)
+                .build()
+
+        S3ClientBuilder builder = S3Client.builder()
 
         if (taskRegion) {
+            Region region = Region.of(taskRegion)
             if (taskEndpoint) {
-                builder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(taskEndpoint, taskRegion))
+                builder.endpointOverride(URI.create(taskEndpoint))
+                    .region(region)
             }
             else {
-                builder.withRegion(taskRegion)
+                builder.region(region)
             }
         }
         else if (taskEndpoint) {
             throw new GradleException('Invalid parameters: [endpoint] is not valid without a provided [region]')
         }
 
-        return builder.build()
+        return builder
+                .credentialsProvider(providerChain)
+                .build()
+
     }
 
     // S3 Extension property names

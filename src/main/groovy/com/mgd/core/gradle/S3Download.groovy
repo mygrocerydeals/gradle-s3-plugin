@@ -1,6 +1,6 @@
 package com.mgd.core.gradle
 
-import com.amazonaws.services.s3.transfer.Download
+import software.amazon.awssdk.transfer.s3.model.Download
 import com.amazonaws.services.s3.transfer.Transfer
 import com.amazonaws.services.s3.transfer.TransferManager
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder

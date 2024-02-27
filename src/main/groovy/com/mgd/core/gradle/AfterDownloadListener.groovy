@@ -1,9 +1,7 @@
 package com.mgd.core.gradle
 
-import com.amazonaws.event.ProgressEvent
-import com.amazonaws.event.ProgressEventType
-import com.amazonaws.event.ProgressListener
-import com.amazonaws.services.s3.transfer.Download
+import software.amazon.awssdk.transfer.s3.model.Download
+import software.amazon.awssdk.transfer.s3.progress.TransferListener
 
 /**
  * File download completion event callback event delegate.
