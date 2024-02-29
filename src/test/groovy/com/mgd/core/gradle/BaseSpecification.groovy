@@ -104,7 +104,8 @@ class BaseSpecification extends Specification {
      * Helper method to derive the Gradle Test Kit root directory relative to the "fake" Gradle test project directory.
      */
     protected static File getTestKitRoot() {
-        return testProjectDir.getCanonicalFile()
+
+        return testProjectDir.canonicalFile
     }
 
     /**
@@ -187,13 +188,11 @@ class BaseSpecification extends Specification {
 
         if (keys) {
             DeleteObjectsRequest deleteRequest = DeleteObjectsRequest.builder()
-                                                        .bucket(s3BucketName)
-                                                        .delete(Delete.builder()
-                                                                    .objects(keys.collect {
-                                                                        ObjectIdentifier.builder().key(it).build()
-                                                                    })
-                                                                    .build())
-                                                        .build()
+                                                    .bucket(s3BucketName)
+                                                    .delete(Delete.builder()
+                                                            .objects(keys.collect { ObjectIdentifier.builder().key(it).build() })
+                                                            .build())
+                                                    .build()
             s3Client.deleteObjects(deleteRequest)
         }
     }

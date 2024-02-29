@@ -8,11 +8,9 @@ import org.gradle.api.tasks.Optional
 import software.amazon.awssdk.auth.credentials.*
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
-import software.amazon.awssdk.services.s3.S3AsyncClientBuilder
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.S3ClientBuilder
 import software.amazon.awssdk.services.s3.S3CrtAsyncClientBuilder
-import software.amazon.awssdk.utils.builder.SdkBuilder
 
 import java.util.regex.Pattern
 
@@ -81,7 +79,6 @@ abstract class AbstractS3Task extends DefaultTask {
         return builder
                 .credentialsProvider(credentialsChain)
                 .build()
-
     }
 
     @Internal
@@ -100,7 +97,6 @@ abstract class AbstractS3Task extends DefaultTask {
         return builder
                 .credentialsProvider(credentialsChain)
                 .build()
-
     }
 
     @Internal
@@ -134,11 +130,10 @@ abstract class AbstractS3Task extends DefaultTask {
         }
 
         if (taskRegion) {
-             return URI.create(taskEndpoint)
+            return URI.create(taskEndpoint)
         }
-        else {
-            throw new GradleException('Invalid parameters: [endpoint] is not valid without a provided [region]')
-        }
+
+        throw new GradleException('Invalid parameters: [endpoint] is not valid without a provided [region]')
     }
 
     @Internal
@@ -147,6 +142,7 @@ abstract class AbstractS3Task extends DefaultTask {
         return taskRegion ? Region.of(taskRegion) : null
     }
 
+    // helper method to parse and validate path pattern expressions
     protected String parsePathPattern(String key) {
 
         if (key ==~ VALID_PATH_PATTERN) {
@@ -158,6 +154,7 @@ abstract class AbstractS3Task extends DefaultTask {
         throw new GradleException("Invalid pathPattern value: ${key}")
     }
 
+    // helper method to parse and validate file paths for S3 keys
     protected String parseKey(String key) {
 
         if ((key ==~ VALID_KEY_PATTERN) && !key.endsWith('/')) {
@@ -171,6 +168,9 @@ abstract class AbstractS3Task extends DefaultTask {
     private static final String PROFILE = 'profile'
     private static final String ENDPOINT = 'endpoint'
     private static final String REGION = 'region'
+
+    private static final Pattern VALID_PATH_PATTERN = ~/^([a-zA-Z0-9-_\.\/])+(\*)?(\*?\/)?$/
+    private static final Pattern VALID_KEY_PATTERN = ~/^([a-zA-Z0-9-_\.\/])+$/
 
     // helper method to return a named S3 Extension property
     private String getS3Property(String name) {
@@ -188,7 +188,4 @@ abstract class AbstractS3Task extends DefaultTask {
                 return null
         }
     }
-
-    private Pattern VALID_PATH_PATTERN = ~/^([a-zA-Z0-9-_\.\/])+(\*)?(\*?\/)?$/
-    private Pattern VALID_KEY_PATTERN = ~/^([a-zA-Z0-9-_\.\/])+$/
 }

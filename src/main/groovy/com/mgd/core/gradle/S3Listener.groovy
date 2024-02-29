@@ -20,21 +20,25 @@ class S3Listener implements TransferListener {
         this.transferListener = transferListener
     }
 
+    @Override
     void transferInitiated(Context.TransferInitiated context) {}
 
+    @Override
     void transferFailed(Context.TransferFailed context) {
         Throwable e = context.exception()
         logger.warn("Transfer failed: ${e.message}")
     }
 
+    @Override
     void transferComplete(Context.TransferComplete context) {
         if (transferListener) {
             transferListener.transferComplete()
         }
     }
 
+    @Override
     void bytesTransferred(Context.BytesTransferred context) {
-        double ratio = context.progressSnapshot().ratioTransferred().orElse(0)
+        BigDecimal ratio = context.progressSnapshot().ratioTransferred().orElse(0)
         logger.info("${df.format(ratio * 100)}%")
     }
 }
