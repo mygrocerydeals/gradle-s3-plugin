@@ -2,6 +2,7 @@ package com.mgd.core.gradle
 
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
 
 import static org.assertj.core.api.Assertions.assertThat
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
@@ -42,7 +43,7 @@ class LocalStackS3UploadTest extends LocalStackSpecification {
     def 'should upload single file to S3'() {
 
         given:
-        String filename = "${UPLOAD_RESOURCES_DIRECTORY}/${SINGLE_UPLOAD_FILENAME}"
+        String filename = seedSingleUploadFile()
         buildFile << """
 
             task putSingleS3File(type: S3Upload)  {
@@ -65,14 +66,17 @@ class LocalStackS3UploadTest extends LocalStackSpecification {
         assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':putSingleS3File').outcome).isEqualTo(SUCCESS)
 
-        List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
+        ListObjectsV2Request request = ListObjectsV2Request.builder()
+                .bucket(s3BucketName)
+                .build()
+        List<String> keys = s3Client.listObjectsV2(request).contents()*.key()
         assertThat(keys).isEqualTo(['single-file-upload.txt'])
     }
 
     def 'should upload single file to S3 with configuration cache enabled'() {
 
         given:
-        String filename = "${UPLOAD_RESOURCES_DIRECTORY}/${SINGLE_UPLOAD_FILENAME}"
+        String filename = seedSingleUploadFile()
         buildFile << """
 
             task putSingleS3FileCached(type: S3Upload)  {
@@ -95,14 +99,17 @@ class LocalStackS3UploadTest extends LocalStackSpecification {
         assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':putSingleS3FileCached').outcome).isEqualTo(SUCCESS)
 
-        List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
+        ListObjectsV2Request request = ListObjectsV2Request.builder()
+                .bucket(s3BucketName)
+                .build()
+        List<String> keys = s3Client.listObjectsV2(request).contents()*.key()
         assertThat(keys).isEqualTo(['single-file-upload.txt'])
     }
 
     def 'should upload directory to S3'() {
 
         given:
-        List<String> expectedKeys = seedUploadFiles().collect { String filename ->
+        List<String> expectedKeys = seedDirectoryUploadFiles().collect { String filename ->
             "${UPLOAD_DIRECTORY_NAME}/${filename}".toString()
         }
         buildFile << """
@@ -127,14 +134,17 @@ class LocalStackS3UploadTest extends LocalStackSpecification {
         assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':putS3Directory').outcome).isEqualTo(SUCCESS)
 
-        List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
+        ListObjectsV2Request request = ListObjectsV2Request.builder()
+                .bucket(s3BucketName)
+                .build()
+        List<String> keys = s3Client.listObjectsV2(request).contents()*.key()
         assertThat(keys).containsAll(expectedKeys)
     }
 
     def 'should upload directory to S3 with configuration cache enabled'() {
 
         given:
-        List<String> expectedKeys = seedUploadFiles().collect { String filename ->
+        List<String> expectedKeys = seedDirectoryUploadFiles().collect { String filename ->
             "${UPLOAD_DIRECTORY_NAME}/${filename}".toString()
         }
         buildFile << """
@@ -159,7 +169,10 @@ class LocalStackS3UploadTest extends LocalStackSpecification {
         assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':putS3DirectoryCached').outcome).isEqualTo(SUCCESS)
 
-        List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
+        ListObjectsV2Request request = ListObjectsV2Request.builder()
+                .bucket(s3BucketName)
+                .build()
+        List<String> keys = s3Client.listObjectsV2(request).contents()*.key()
         assertThat(keys).containsAll(expectedKeys)
     }
 }
