@@ -139,23 +139,50 @@ abstract class S3Download extends AbstractS3Task {
     protected DownloadDirectoryRequest getPathPatternDirectoryRequest(File parentDir, String bucket, String pattern) {
 
         boolean isWildcard = pattern.endsWith('*/')
-        String key = parsePathPattern(pattern)
-        File f = new File(parentDir, key)
+        String path = parsePathPattern(pattern)
+        List<String> segments = path.split(/\//)
+        int segmentCount = segments.size()
 
-        // create any parent directories which prefix the wildcard expression
-        if (isWildcard) {
-            List<String> segments = key.split(/\//)
-            if (segments.size() > 1) {
-                segments.removeLast()
-                f = new File(parentDir, segments.join('/'))
+        // create the parent directory if it doesn't already exist
+        (parentDir.canonicalFile).mkdirs()
+
+        DownloadFilter filter = new DownloadFilter() {
+
+            @Override
+            boolean test(S3Object s3Object) {
+
+                List<String> s3Segments = s3Object.key().split(/\//)
+                int s3SegmentCount = s3Segments.size() - 1
+
+                if (!s3SegmentCount || (s3SegmentCount < segmentCount)) {
+                    // file is higher in the hierarchy than the search pattern depth
+                    return false
+                }
+
+                s3Segments.removeLast()
+                String s3Path = s3Segments.join('/')
+
+                if (isWildcard) {
+                    // matcher for wildcard expression
+                    return s3Path.startsWith(path)
+                }
+
+                // matcher for directory name expression
+                for (int i = 0; i < segmentCount; i++) {
+                    if (s3Segments[i] != segments[i]) {
+                        return false
+                    }
+                }
+
+                // all search pattern segments match the s3 parent segments
+                return true
             }
         }
-        (f.canonicalFile).mkdirs()
 
         DownloadDirectoryRequest directoryRequest = DownloadDirectoryRequest.builder()
                 .bucket(bucket)
-                .listObjectsV2RequestTransformer(l -> l.prefix(key).delimiter('/'))
-                .destination(f.toPath())
+                .destination(parentDir.toPath())
+                .filter(filter)
                 .build()
 
         return directoryRequest
@@ -169,28 +196,33 @@ abstract class S3Download extends AbstractS3Task {
         List<String> segments = parsePathPattern(pattern).split(/\//)
         boolean isTree = (segments.size() > 1)
         String filePattern = isTree ? segments.removeLast() : segments.first()
-        String key = isTree ? segments.join('/') : null
+        String pathPattern = isTree ? segments.join('/') : ''
 
-        File f = isTree ? new File(parentDir, key) : parentDir
-        (f.canonicalFile).mkdirs()
+        // create the parent directory if it doesn't already exist
+        (parentDir.canonicalFile).mkdirs()
 
         DownloadFilter filter = new DownloadFilter() {
 
             @Override
             boolean test(S3Object s3Object) {
-                String name = s3Object.key().split(/\//).last()
-                return name.startsWith(filePattern)
+
+                List<String> s3Segments = s3Object.key().split(/\//)
+                boolean isS3Tree = (s3Segments.size() > 1)
+                String s3Name = isS3Tree ? s3Segments.removeLast() : s3Segments.first()
+                String s3Path = isS3Tree ? s3Segments.join('/') : ''
+
+                if (isTree && !s3Path.startsWith(pathPattern)) {
+                    return false
+                }
+
+                return s3Name.startsWith(filePattern)
             }
         }
 
         DownloadDirectoryRequest.Builder builder = DownloadDirectoryRequest.builder()
                 .bucket(bucket)
-                .destination(f.toPath())
+                .destination(parentDir.toPath())
                 .filter(filter)
-
-        if (isTree) {
-            builder.listObjectsV2RequestTransformer(l -> l.prefix(key).delimiter('/'))
-        }
 
         return builder.build()
     }
@@ -225,12 +257,12 @@ abstract class S3Download extends AbstractS3Task {
      */
     protected DownloadDirectoryRequest getRecursiveDirectoryRequest(File parentDir, String key, String bucket) {
 
-        File f = key ? new File(parentDir, key) : parentDir
-        f.mkdirs()
+        // create the parent directory if it doesn't already exist
+        (parentDir.canonicalFile).mkdirs()
 
         DownloadDirectoryRequest.Builder builder = DownloadDirectoryRequest.builder()
                 .bucket(bucket)
-                .destination(f.toPath())
+                .destination(parentDir.toPath())
 
         if (key) {
             builder.listObjectsV2RequestTransformer(l -> l.prefix(key).delimiter('/'))
