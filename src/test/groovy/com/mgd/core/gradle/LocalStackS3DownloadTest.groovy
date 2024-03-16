@@ -39,8 +39,6 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
 
         given:
         String filename = "${DOWNLOAD_DIRECTORY_PREFIX}/${SINGLE_DOWNLOAD_FILENAME}"
-        File file = new File("${testKitParentDirectoryName}/${filename}")
-        file.parentFile.mkdirs()
         buildFile << """
 
             task getSingleS3File(type: S3Download)  {
@@ -55,6 +53,7 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
         """
 
         when:
+        File file = new File("${testKitParentDirectoryName}/${filename}")
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
                 .withArguments('getSingleS3File')
@@ -74,8 +73,6 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
 
         given:
         String filename = "${DOWNLOAD_DIRECTORY_PREFIX}/${SINGLE_DOWNLOAD_FILENAME}"
-        File file = new File("${testKitParentDirectoryName}/${filename}")
-        file.parentFile.mkdirs()
         buildFile << """
 
             task getSingleS3FileCached(type: S3Download)  {
@@ -90,6 +87,7 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
         """
 
         when:
+        File file = new File("${testKitParentDirectoryName}/${filename}")
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
                 .withArguments('--configuration-cache', 'getSingleS3FileCached')

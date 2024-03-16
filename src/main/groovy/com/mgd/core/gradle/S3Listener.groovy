@@ -27,7 +27,6 @@ class S3Listener implements TransferListener {
     void transferFailed(Context.TransferFailed context) {
         Throwable e = context.exception()
         logger.warn("Transfer failed: ${e.message}", e)
-        logger.warn("Caused by: ${e.cause?.message}")
     }
 
     @Override

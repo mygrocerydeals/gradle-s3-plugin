@@ -25,7 +25,7 @@ class AwsSpecification extends BaseSpecification {
         s3Client.createBucket(request)
 
         // latency to give S3 time to propagate the new bucket
-        sleep(500)
+        sleep(700)
     }
 
     /**

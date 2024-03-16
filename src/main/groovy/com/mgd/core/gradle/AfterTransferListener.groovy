@@ -22,7 +22,7 @@ class AfterTransferListener {
             then.call(file)
         }
         catch (Exception e) {
-            logger.warn("Exception thrown in file callback for file ${file?.name}: ${e.message}")
+            logger.warn("Exception thrown in file callback for file ${file?.name}: ${e.message}", e)
         }
     }
 }

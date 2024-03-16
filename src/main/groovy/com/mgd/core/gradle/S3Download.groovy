@@ -181,7 +181,7 @@ abstract class S3Download extends AbstractS3Task {
 
         DownloadDirectoryRequest directoryRequest = DownloadDirectoryRequest.builder()
                 .bucket(bucket)
-                .destination(parentDir.toPath())
+                .destination(parentDir.canonicalFile.toPath())
                 .filter(filter)
                 .build()
 
@@ -221,7 +221,7 @@ abstract class S3Download extends AbstractS3Task {
 
         DownloadDirectoryRequest.Builder builder = DownloadDirectoryRequest.builder()
                 .bucket(bucket)
-                .destination(parentDir.toPath())
+                .destination(parentDir.canonicalFile.toPath())
                 .filter(filter)
 
         return builder.build()
@@ -247,7 +247,7 @@ abstract class S3Download extends AbstractS3Task {
 
         DownloadDirectoryRequest.Builder builder = DownloadDirectoryRequest.builder()
                 .bucket(bucket)
-                .destination(parentDir.toPath())
+                .destination(parentDir.canonicalFile.toPath())
 
         if (key) {
             builder.listObjectsV2RequestTransformer(l -> l.prefix(key).delimiter('/'))
@@ -285,7 +285,7 @@ abstract class S3Download extends AbstractS3Task {
 
         DownloadFileRequest fileRequest = DownloadFileRequest.builder()
                 .getObjectRequest(b -> b.bucket(bucket).key(key))
-                .destination(file.toPath())
+                .destination(file.canonicalFile.toPath())
                 .addTransferListener(new S3Listener(logger, transferListener))
                 .build()
 

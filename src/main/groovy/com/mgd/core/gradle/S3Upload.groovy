@@ -73,7 +73,7 @@ abstract class S3Upload extends AbstractS3Task {
             logger.quiet("S3 Upload directory ${source} -> ${destination}")
 
             UploadDirectoryRequest request = UploadDirectoryRequest.builder()
-                                                .source(sourceDirectory.toPath())
+                                                .source(sourceDirectory.canonicalFile.toPath())
                                                 .bucket(taskBucket)
                                                 .s3Prefix(keyPrefix)
                                                 .build()
@@ -117,7 +117,7 @@ abstract class S3Upload extends AbstractS3Task {
             }
 
             UploadFileRequest request = UploadFileRequest.builder()
-                    .source(f.toPath())
+                    .source(f.canonicalFile.toPath())
                     .putObjectRequest(b -> b.bucket(taskBucket).key(key))
                     .addTransferListener(new S3Listener(logger, transferListener))
                     .build()
