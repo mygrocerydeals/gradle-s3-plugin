@@ -1,15 +1,18 @@
 package com.mgd.core.gradle
 
-import com.amazonaws.auth.*
-import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import com.amazonaws.client.builder.AwsClientBuilder
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
+import software.amazon.awssdk.auth.credentials.*
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.S3AsyncClient
+import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.S3ClientBuilder
+import software.amazon.awssdk.services.s3.S3CrtAsyncClientBuilder
+
+import java.util.regex.Pattern
 
 /**
  * Abstract base class for the S3Upload and S3Download S3 Gradle plugin tasks.
@@ -61,40 +64,103 @@ abstract class AbstractS3Task extends DefaultTask {
     }
 
     @Internal
-    protected AmazonS3 getS3Client() {
+    protected S3Client getS3Client() {
+
+        S3ClientBuilder builder = S3Client.builder()
+
+        if (parsedEndpoint) {
+            builder.endpointOverride(parsedEndpoint)
+                    .region(parsedRegion)
+        }
+        else if (parsedRegion) {
+            builder.region(parsedRegion)
+        }
+
+        return builder
+                .credentialsProvider(credentialsChain)
+                .build()
+    }
+
+    @Internal
+    protected S3AsyncClient getAsyncS3Client() {
+
+        S3CrtAsyncClientBuilder builder = S3AsyncClient.crtBuilder()
+
+        if (parsedEndpoint) {
+            builder.endpointOverride(parsedEndpoint)
+                    .region(parsedRegion)
+        }
+        else if (parsedRegion) {
+            builder.region(parsedRegion)
+        }
+
+        return builder
+                .credentialsProvider(credentialsChain)
+                .build()
+    }
+
+    @Internal
+    protected AwsCredentialsProviderChain getCredentialsChain() {
 
         ProfileCredentialsProvider profileCreds
         if (taskProfile) {
             logger.quiet("Using AWS credentials profile: ${profile}")
-            profileCreds = new ProfileCredentialsProvider(profile)
+            profileCreds = ProfileCredentialsProvider.create(profile)
         }
         else {
-            profileCreds = new ProfileCredentialsProvider()
+            profileCreds = ProfileCredentialsProvider.create()
         }
 
-        AWSCredentialsProvider creds = new AWSCredentialsProviderChain(
-                new EnvironmentVariableCredentialsProvider(),
-                new SystemPropertiesCredentialsProvider(),
-                profileCreds,
-                new EC2ContainerCredentialsProviderWrapper()
-        )
+        List<AwsCredentialsProvider> credentialsProviders = []
+        credentialsProviders << EnvironmentVariableCredentialsProvider.create()
+        credentialsProviders << SystemPropertyCredentialsProvider.create()
+        credentialsProviders << profileCreds
+        credentialsProviders << ContainerCredentialsProvider.builder().build()
 
-        AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard()
-                .withCredentials(creds)
+        return AwsCredentialsProviderChain.builder()
+                .credentialsProviders(credentialsProviders)
+                .build()
+    }
+
+    @Internal
+    protected URI getParsedEndpoint() {
+
+        if (!taskEndpoint) {
+            return null
+        }
 
         if (taskRegion) {
-            if (taskEndpoint) {
-                builder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(taskEndpoint, taskRegion))
-            }
-            else {
-                builder.withRegion(taskRegion)
-            }
-        }
-        else if (taskEndpoint) {
-            throw new GradleException('Invalid parameters: [endpoint] is not valid without a provided [region]')
+            return URI.create(taskEndpoint)
         }
 
-        return builder.build()
+        throw new GradleException('Invalid parameters: [endpoint] is not valid without a provided [region]')
+    }
+
+    @Internal
+    protected Region getParsedRegion() {
+
+        return taskRegion ? Region.of(taskRegion) : null
+    }
+
+    // helper method to parse and validate path pattern expressions
+    protected String parsePathPattern(String key) {
+
+        if (key ==~ VALID_PATH_PATTERN) {
+            String parsedKey = key.replaceAll(/(^\/)|(\*?\/$)|(\*$)/, '')
+            if (!parsedKey.endsWith('/')) {
+                return parsedKey
+            }
+        }
+        throw new GradleException("Invalid pathPattern value: ${key}")
+    }
+
+    // helper method to parse and validate file paths for S3 keys
+    protected String parseKey(String key) {
+
+        if ((key ==~ VALID_KEY_PATTERN) && !key.endsWith('/')) {
+            return key
+        }
+        throw new GradleException("Invalid S3 path: ${key}")
     }
 
     // S3 Extension property names
@@ -102,6 +168,9 @@ abstract class AbstractS3Task extends DefaultTask {
     private static final String PROFILE = 'profile'
     private static final String ENDPOINT = 'endpoint'
     private static final String REGION = 'region'
+
+    private static final Pattern VALID_PATH_PATTERN = ~/^([a-zA-Z0-9-_\.\/])+(\*)?(\*?\/)?$/
+    private static final Pattern VALID_KEY_PATTERN = ~/^([a-zA-Z0-9-_\.\/])+$/
 
     // helper method to return a named S3 Extension property
     private String getS3Property(String name) {

@@ -1,12 +1,12 @@
 package com.mgd.core.gradle
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider
-import com.amazonaws.auth.BasicAWSCredentials
-import com.amazonaws.client.builder.AwsClientBuilder
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import org.testcontainers.containers.localstack.LocalStackContainer
 import org.testcontainers.spock.Testcontainers
 import org.testcontainers.utility.DockerImageName
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.S3Client
 import spock.lang.Shared
 
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3
@@ -40,13 +40,13 @@ class LocalStackSpecification extends BaseSpecification {
         accessKeyId = localStack.accessKey
         secretKey = localStack.secretKey
 
-        s3Client = AmazonS3ClientBuilder.standard()
-            .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(defaultEndpoint, defaultRegion))
-            .withCredentials(
-                new AWSStaticCredentialsProvider(
-                    new BasicAWSCredentials(localStack.accessKey, localStack.secretKey)
-                )
-            )
-            .build()
+        StaticCredentialsProvider credentialsProvider = StaticCredentialsProvider.create(
+                AwsBasicCredentials.create(localStack.accessKey, localStack.secretKey))
+
+        s3Client = S3Client.builder()
+                        .credentialsProvider(credentialsProvider)
+                        .endpointOverride(URI.create(defaultEndpoint))
+                        .region(Region.of(defaultRegion))
+                        .build()
     }
 }

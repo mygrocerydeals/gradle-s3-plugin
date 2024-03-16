@@ -1,8 +1,8 @@
 package com.mgd.core.gradle
 
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.DeleteObjectsRequest
 import groovy.io.FileType
+import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.model.*
 import spock.lang.Specification
 
 import java.text.SimpleDateFormat
@@ -13,10 +13,16 @@ import java.text.SimpleDateFormat
  */
 class BaseSpecification extends Specification {
 
+    static final String GRADLE_VERSION = '8.6'
+    static final String DAEMON_PREFIX = 'test-kit-daemon'
+
     static final String BUILD_FILE = 'build.gradle'
     static final String SETTINGS_FILE = 'settings.gradle'
 
+    static final String DOWNLOAD_DIRECTORY_PREFIX = 'S3DownloadTest'
+    static final String UPLOAD_DIRECTORY_PREFIX = 'S3UploadTest'
     static final String DOWNLOAD_PROJECT_DIRECTORY = 'build/tmp/test/S3DownloadTest'
+    static final String LOCALSTACK_DOWNLOAD_PROJECT_DIRECTORY = 'build/tmp/test/S3LocalStackDownloadTest'
     static final String DOWNLOAD_RESOURCES_DIRECTORY = 'src/test/resources/s3-download-bucket'
     static final String UPLOAD_PROJECT_DIRECTORY = 'build/tmp/test/S3UploadTest'
     static final String UPLOAD_RESOURCES_DIRECTORY = 'src/test/resources/s3-upload-files'
@@ -29,17 +35,25 @@ class BaseSpecification extends Specification {
     static final String UPLOAD_DIRECTORY_NAME = 'directory-upload'
 
     static final String SINGLE_DIRECTORY_NAME = 'single-directory'
-    static final String DIRECTORY_MATCHING_PATTERN = 'pattern-dir-1*'
-    static final String FILE_MATCHING_PATTERN = 'pattern-dir-2/pattern*'
+    static final String SINGLE_NESTED_DIRECTORY_NAME = 'single-directory/single-directory-subfolder'
+    static final String SIMPLE_FILE_MATCHING_PATTERN = 'pattern-dir-1*'
+    static final String COMPOUND_FILE_MATCHING_PATTERN = 'pattern-dir-2/pattern*'
+    static final String MULTI_DIRECTORY_MATCHING_PATTERN = 'multi-match*'
+    static final String DIRECTORY_MATCHING_PATTERN = 'single-dir*'
 
     static final String DEFAULT_REGION = 'us-east-1'
 
-    static AmazonS3 s3Client
+    static S3Client s3Client
     static String s3BucketName
 
     static File testProjectDir
 
-    File singleDownloadFile
+    static String testKitParentDirectoryName
+    static String testKitDownloadDirectoryName
+    static String testKitUploadDirectoryName
+
+    File downloadDir
+    File patternsDir
     File buildFile
     File settingsFile
 
@@ -69,10 +83,52 @@ class BaseSpecification extends Specification {
     }
 
     /**
+     * Helper method to initialize the working directories in the Gradle test kit.
+     */
+    protected static void initializeTestKitDirectory(String name) {
+
+        testKitParentDirectoryName = "${name}/${DAEMON_PREFIX}/${GRADLE_VERSION}"
+        testKitDownloadDirectoryName = "${testKitParentDirectoryName}/${DOWNLOAD_DIRECTORY_PREFIX}"
+        testKitUploadDirectoryName = "${testKitParentDirectoryName}/${UPLOAD_DIRECTORY_PREFIX}"
+
+        List<String> folders = [testKitDownloadDirectoryName, testKitUploadDirectoryName]
+        folders.each { folder ->
+            File dir = new File(folder)
+            if (dir.exists()) {
+                dir.deleteDir()
+            }
+        }
+    }
+
+    /**
+     * Helper method to derive the Gradle Test Kit root directory relative to the "fake" Gradle test project directory.
+     */
+    protected static File getTestKitRoot() {
+
+        return testProjectDir.canonicalFile
+    }
+
+    /**
      * Helper method to seed the "fake" Gradle test project root with files from the resources directory of the "real"
      * Gradle S3 Plugin project.
      */
-    protected static List<String> seedUploadFiles() {
+    protected static String seedSingleUploadFile() {
+
+        File projectDir = new File(UPLOAD_PROJECT_DIRECTORY)
+        projectDir.mkdirs()
+
+        File source = new File(UPLOAD_RESOURCES_DIRECTORY, SINGLE_UPLOAD_FILENAME)
+        File target = new File(UPLOAD_PROJECT_DIRECTORY, SINGLE_UPLOAD_FILENAME)
+        target << source.text
+
+        return target.canonicalPath.replaceAll('\\\\', '\\/')
+    }
+
+    /**
+     * Helper method to seed the "fake" Gradle test project root with files from the resources directory of the "real"
+     * Gradle S3 Plugin project.
+     */
+    protected static List<String> seedDirectoryUploadFiles() {
 
         List<String> filenames = []
 
@@ -101,9 +157,16 @@ class BaseSpecification extends Specification {
 
         File resourceDir = new File(DOWNLOAD_RESOURCES_DIRECTORY)
         resourceDir.eachFileRecurse(FileType.FILES) { File file ->
-            String prefix = file.parent.replace(parentRoot, '').replace(File.separator, '')
+            String prefix = file.parent.replace(parentRoot, '')
+                    .replace(File.separator, '/')
+                    .replaceAll(/(^\/)|(\/$)/, '')
             String key = prefix ? "${prefix}/${file.name}" : file.name
-            s3Client.putObject(s3BucketName, key, file)
+
+            PutObjectRequest request = PutObjectRequest.builder()
+                                            .bucket(s3BucketName)
+                                            .key(key)
+                                            .build()
+            s3Client.putObject(request, file.toPath())
         }
 
         if (addLatency) {
@@ -117,10 +180,20 @@ class BaseSpecification extends Specification {
      */
     protected static void clearS3Bucket() {
 
-        List<String> keys = s3Client.listObjects(s3BucketName).objectSummaries*.key
+        ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
+                .bucket(s3BucketName)
+                .build()
+
+        List<String> keys = s3Client.listObjectsV2(listRequest).contents()*.key()
+
         if (keys) {
-            s3Client.deleteObjects(new DeleteObjectsRequest(s3BucketName)
-                    .withKeys(keys.collect { new DeleteObjectsRequest.KeyVersion(it) }))
+            DeleteObjectsRequest deleteRequest = DeleteObjectsRequest.builder()
+                                                    .bucket(s3BucketName)
+                                                    .delete(Delete.builder()
+                                                            .objects(keys.collect { ObjectIdentifier.builder().key(it).build() })
+                                                            .build())
+                                                    .build()
+            s3Client.deleteObjects(deleteRequest)
         }
     }
 
@@ -130,7 +203,10 @@ class BaseSpecification extends Specification {
     protected static void deleteS3Bucket() {
 
         clearS3Bucket()
-        s3Client.deleteBucket(s3BucketName)
+        DeleteBucketRequest request = DeleteBucketRequest.builder()
+                                        .bucket(s3BucketName)
+                                        .build()
+        s3Client.deleteBucket(request)
     }
 
     /**
@@ -142,11 +218,17 @@ class BaseSpecification extends Specification {
 
         buildFile = new File(testProjectDir, BUILD_FILE)
         settingsFile = new File(testProjectDir, SETTINGS_FILE)
-        singleDownloadFile = new File(SINGLE_DOWNLOAD_FILENAME)
+        downloadDir = new File(testProjectDir, DOWNLOAD_DIRECTORY_ROOT)
+        patternsDir = new File(testProjectDir, DOWNLOAD_PATTERNS_ROOT)
 
-        [buildFile, settingsFile, singleDownloadFile].each { File file ->
+        [buildFile, settingsFile, downloadDir, patternsDir].each { File file ->
             if (file.exists()) {
-                file.delete()
+                if (file.isDirectory()) {
+                    file.deleteDir()
+                }
+                else {
+                    file.delete()
+                }
             }
         }
     }

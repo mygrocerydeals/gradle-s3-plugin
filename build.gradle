@@ -35,7 +35,9 @@ repositories {
 dependencies {
     implementation gradleApi()
     implementation localGroovy()
-    api group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: amazonAWSVersion
+    api group: 'software.amazon.awssdk', name: 's3', version: amazonAwsSdkVersion
+    api group: 'software.amazon.awssdk', name: 's3-transfer-manager', version: amazonAwsSdkVersion
+    api group: 'software.amazon.awssdk.crt', name: 'aws-crt', version: amazonAwsSdkCrtVersion
 
     testRuntimeOnly group:'org.junit.platform', name: 'junit-platform-launcher', version: jUnitTestLauncherVersion
     testImplementation group: 'org.spockframework', name: 'spock-core', version: spockVersion

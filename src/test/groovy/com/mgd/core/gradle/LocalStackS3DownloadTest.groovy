@@ -16,7 +16,8 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
     def setupSpec() {
 
         seedS3DownloadBuckets()
-        initializeTestProjectDirectory(DOWNLOAD_PROJECT_DIRECTORY)
+        initializeTestProjectDirectory(LOCALSTACK_DOWNLOAD_PROJECT_DIRECTORY)
+        initializeTestKitDirectory(LOCALSTACK_DOWNLOAD_PROJECT_DIRECTORY)
     }
 
     def setup() {
@@ -37,7 +38,7 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
     def 'should download single S3 file'() {
 
         given:
-        String filename = "${DOWNLOAD_PROJECT_DIRECTORY}/${SINGLE_DOWNLOAD_FILENAME}"
+        String filename = "${DOWNLOAD_DIRECTORY_PREFIX}/${SINGLE_DOWNLOAD_FILENAME}"
         buildFile << """
 
             task getSingleS3File(type: S3Download)  {
@@ -52,9 +53,10 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
         """
 
         when:
-        File file = new File(filename)
+        File file = new File("${testKitParentDirectoryName}/${filename}")
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
+                .withTestKitDir(testKitRoot)
                 .withArguments('getSingleS3File')
                 .withPluginClasspath()
                 .build()
@@ -71,7 +73,7 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
     def 'should download single S3 file with configuration cache enabled'() {
 
         given:
-        String filename = "${DOWNLOAD_PROJECT_DIRECTORY}/${SINGLE_DOWNLOAD_FILENAME}"
+        String filename = "${DOWNLOAD_DIRECTORY_PREFIX}/${SINGLE_DOWNLOAD_FILENAME}"
         buildFile << """
 
             task getSingleS3FileCached(type: S3Download)  {
@@ -86,9 +88,10 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
         """
 
         when:
-        File file = new File(filename)
+        File file = new File("${testKitParentDirectoryName}/${filename}")
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
+                .withTestKitDir(testKitRoot)
                 .withArguments('--configuration-cache', 'getSingleS3FileCached')
                 .withPluginClasspath()
                 .build()
@@ -105,6 +108,10 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
     def 'should download S3 directory'() {
 
         given:
+        List<String> expectedFiles = [
+            'directory-file.txt', 'directory-subfolder-file.txt'
+        ]
+
         buildFile << """
 
             task getS3Directory(type: S3Download)  {
@@ -122,7 +129,7 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
         """
 
         when:
-        String directoryPath = "${DOWNLOAD_PROJECT_DIRECTORY}/${DOWNLOAD_DIRECTORY_ROOT}"
+        String directoryPath = "${LOCALSTACK_DOWNLOAD_PROJECT_DIRECTORY}/${DOWNLOAD_DIRECTORY_ROOT}"
         File file = new File(directoryPath)
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
@@ -140,14 +147,18 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
         int fileCount = 0
         file.eachFileRecurse(FileType.FILES) { File f ->
             fileCount++
-            assertThat(f.name).isEqualTo('directory-file.txt')
+            assertThat(expectedFiles).contains(f.name)
         }
-        assertThat(fileCount).isEqualTo(1)
+        assertThat(fileCount).isEqualTo(expectedFiles.size())
     }
 
     def 'should download S3 directory with configuration cache enabled'() {
 
         given:
+        List<String> expectedFiles = [
+                'directory-file.txt', 'directory-subfolder-file.txt'
+        ]
+
         buildFile << """
 
             task getS3DirectoryCached(type: S3Download)  {
@@ -165,7 +176,7 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
         """
 
         when:
-        String directoryPath = "${DOWNLOAD_PROJECT_DIRECTORY}/${DOWNLOAD_DIRECTORY_ROOT}"
+        String directoryPath = "${LOCALSTACK_DOWNLOAD_PROJECT_DIRECTORY}/${DOWNLOAD_DIRECTORY_ROOT}"
         File file = new File(directoryPath)
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
@@ -183,17 +194,18 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
         int fileCount = 0
         file.eachFileRecurse(FileType.FILES) { File f ->
             fileCount++
-            assertThat(f.name).isEqualTo('directory-file.txt')
+            assertThat(expectedFiles).contains(f.name)
         }
-        assertThat(fileCount).isEqualTo(1)
+        assertThat(fileCount).isEqualTo(expectedFiles.size())
     }
 
     def 'should download S3 path patterns'() {
 
         given:
         List<String> expectedFiles = [
-            'single-file.txt', 'directory-file.txt', 'pattern-dir-2-file.txt',
-            'non-matching-dir-1-file.txt', 'pattern-dir-1-file-1.txt', 'pattern-dir-1-file-2.txt'
+            'single-file.txt', 'pattern-dir-2-file.txt',
+            'pattern-dir-1-file-1.txt', 'pattern-dir-1-file-2.txt',
+            'directory-file.txt', 'directory-subfolder-file.txt'
         ]
 
         buildFile << """
@@ -206,8 +218,8 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
                 bucket = '${s3BucketName}'
                 destDir = '${DOWNLOAD_PATTERNS_ROOT}'
                 pathPatterns = [
-                    '${DIRECTORY_MATCHING_PATTERN}',
-                    '${FILE_MATCHING_PATTERN}',
+                    '${SIMPLE_FILE_MATCHING_PATTERN}',
+                    '${COMPOUND_FILE_MATCHING_PATTERN}',
                     '${SINGLE_DIRECTORY_NAME}/',
                     '${SINGLE_DOWNLOAD_FILENAME}'
                 ]
@@ -218,7 +230,7 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
         """
 
         when:
-        String directoryPath = "${DOWNLOAD_PROJECT_DIRECTORY}/${DOWNLOAD_PATTERNS_ROOT}"
+        String directoryPath = "${LOCALSTACK_DOWNLOAD_PROJECT_DIRECTORY}/${DOWNLOAD_PATTERNS_ROOT}"
         File file = new File(directoryPath)
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
@@ -227,7 +239,7 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
                 .build()
 
         then:
-        String s = "S3 Download path patterns s3://${s3BucketName}/${DIRECTORY_MATCHING_PATTERN},${FILE_MATCHING_PATTERN},${SINGLE_DIRECTORY_NAME}/,${SINGLE_DOWNLOAD_FILENAME} -> ${DOWNLOAD_PATTERNS_ROOT}"
+        String s = "S3 Download path patterns s3://${s3BucketName}/${SIMPLE_FILE_MATCHING_PATTERN},${COMPOUND_FILE_MATCHING_PATTERN},${SINGLE_DIRECTORY_NAME}/,${SINGLE_DOWNLOAD_FILENAME} -> ${DOWNLOAD_PATTERNS_ROOT}"
         assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':getS3PathPatterns').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
@@ -245,8 +257,9 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
 
         given:
         List<String> expectedFiles = [
-                'single-file.txt', 'directory-file.txt', 'pattern-dir-2-file.txt',
-                'non-matching-dir-1-file.txt', 'pattern-dir-1-file-1.txt', 'pattern-dir-1-file-2.txt'
+            'single-file.txt', 'pattern-dir-2-file.txt',
+            'pattern-dir-1-file-1.txt', 'pattern-dir-1-file-2.txt',
+            'directory-file.txt', 'directory-subfolder-file.txt'
         ]
 
         buildFile << """
@@ -259,8 +272,8 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
                 bucket = '${s3BucketName}'
                 destDir = '${DOWNLOAD_PATTERNS_ROOT}'
                 pathPatterns = [
-                    '${DIRECTORY_MATCHING_PATTERN}',
-                    '${FILE_MATCHING_PATTERN}',
+                    '${SIMPLE_FILE_MATCHING_PATTERN}',
+                    '${COMPOUND_FILE_MATCHING_PATTERN}',
                     '${SINGLE_DIRECTORY_NAME}/',
                     '${SINGLE_DOWNLOAD_FILENAME}'
                 ]
@@ -271,7 +284,7 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
         """
 
         when:
-        String directoryPath = "${DOWNLOAD_PROJECT_DIRECTORY}/${DOWNLOAD_PATTERNS_ROOT}"
+        String directoryPath = "${LOCALSTACK_DOWNLOAD_PROJECT_DIRECTORY}/${DOWNLOAD_PATTERNS_ROOT}"
         File file = new File(directoryPath)
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
@@ -280,7 +293,7 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
                 .build()
 
         then:
-        String s = "S3 Download path patterns s3://${s3BucketName}/${DIRECTORY_MATCHING_PATTERN},${FILE_MATCHING_PATTERN},${SINGLE_DIRECTORY_NAME}/,${SINGLE_DOWNLOAD_FILENAME} -> ${DOWNLOAD_PATTERNS_ROOT}"
+        String s = "S3 Download path patterns s3://${s3BucketName}/${SIMPLE_FILE_MATCHING_PATTERN},${COMPOUND_FILE_MATCHING_PATTERN},${SINGLE_DIRECTORY_NAME}/,${SINGLE_DOWNLOAD_FILENAME} -> ${DOWNLOAD_PATTERNS_ROOT}"
         assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':getS3PathPatternsCached').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
