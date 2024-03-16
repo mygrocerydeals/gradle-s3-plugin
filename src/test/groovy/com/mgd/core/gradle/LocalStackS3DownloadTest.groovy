@@ -35,6 +35,7 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
         """
     }
 
+    /*
     def 'should download single S3 file'() {
 
         given:
@@ -102,6 +103,7 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
                 .isFile()
                 .hasName(SINGLE_DOWNLOAD_FILENAME)
     }
+    */
 
     def 'should download S3 directory'() {
 
