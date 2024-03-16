@@ -132,7 +132,6 @@ By default `S3Upload` does not overwrite the S3 object if it already exists. Set
 
   + `keyPrefix` - root S3 prefix under which to create the uploaded contents *(optional, if not provided files will be uploaded to S3 bucket root)*
   + `sourceDir` - local directory containing the contents to be uploaded
-  + `then` - *(optional)*, callback closure called upon completion with each java.io.File that was uploaded
 
 A directory upload will always overwrite existing content if it already exists under the specified S3 prefix.
 
