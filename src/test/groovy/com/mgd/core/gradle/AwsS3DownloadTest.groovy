@@ -3,6 +3,8 @@ package com.mgd.core.gradle
 import groovy.io.FileType
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import static org.assertj.core.api.Assertions.assertThat
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
@@ -12,6 +14,8 @@ import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
  */
 @SuppressWarnings('LineLength')
 class AwsS3DownloadTest extends AwsSpecification {
+
+    private static final Logger log = LoggerFactory.getLogger(AwsS3DownloadTest)
 
     def setupSpec() {
 
@@ -55,11 +59,17 @@ class AwsS3DownloadTest extends AwsSpecification {
         """
 
         when:
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
-                .withArguments('getSingleS3File')
-                .withPluginClasspath()
-                .build()
+        BuildResult result
+        try {
+            result = GradleRunner.create()
+                    .withProjectDir(testProjectDir)
+                    .withArguments('getSingleS3File')
+                    .withPluginClasspath()
+                    .build()
+        }
+        catch (Exception e) {
+            log.error("Exception thrown in download test: ${e.message}", e)
+        }
 
         then:
         String s = "S3 Download s3://${s3BucketName}/${SINGLE_DOWNLOAD_FILENAME} -> ${filename}"
