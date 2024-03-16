@@ -113,7 +113,7 @@ abstract class S3Upload extends AbstractS3Task {
             AfterTransferListener transferListener = null
 
             if (then) {
-                transferListener = new AfterTransferListener(f, then)
+                transferListener = new AfterTransferListener(f, logger, then)
             }
 
             UploadFileRequest request = UploadFileRequest.builder()

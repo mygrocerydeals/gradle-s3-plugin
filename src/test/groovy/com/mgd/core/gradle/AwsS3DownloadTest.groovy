@@ -40,6 +40,7 @@ class AwsS3DownloadTest extends AwsSpecification {
         """
     }
 
+    /**/
     def 'should download single S3 file'() {
 
         given:
@@ -97,6 +98,7 @@ class AwsS3DownloadTest extends AwsSpecification {
                 .isFile()
                 .hasName(SINGLE_DOWNLOAD_FILENAME)
     }
+    /**/
 
     def 'should download S3 directory'() {
 

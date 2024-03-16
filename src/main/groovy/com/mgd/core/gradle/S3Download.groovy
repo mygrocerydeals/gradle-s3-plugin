@@ -280,7 +280,7 @@ abstract class S3Download extends AbstractS3Task {
 
         AfterTransferListener transferListener = null
         if (then) {
-            transferListener = new AfterTransferListener(file, then)
+            transferListener = new AfterTransferListener(file, logger, then)
         }
 
         DownloadFileRequest fileRequest = DownloadFileRequest.builder()
