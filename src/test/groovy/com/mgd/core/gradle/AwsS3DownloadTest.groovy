@@ -59,6 +59,7 @@ class AwsS3DownloadTest extends AwsSpecification {
         """
 
         when:
+        String error
         BuildResult result
         try {
             result = GradleRunner.create()
@@ -68,11 +69,14 @@ class AwsS3DownloadTest extends AwsSpecification {
                     .build()
         }
         catch (Exception e) {
-            log.error("Exception thrown in download test: ${e.message}", e)
+            String s = "Exception thrown in download test: ${e.message}"
+            log.error(s, e)
+            error = s + " ; caused by: ${e.cause.message}"
         }
 
         then:
         String s = "S3 Download s3://${s3BucketName}/${SINGLE_DOWNLOAD_FILENAME} -> ${filename}"
+        assertThat(error).isNull()
         assertThat(parseOutput(result.output)).contains(s)
         assertThat(result.task(':getSingleS3File').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
