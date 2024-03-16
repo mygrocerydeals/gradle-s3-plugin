@@ -3,8 +3,7 @@
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 [![Gradle Plugin](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com/mgd/core/gradle/s3/com.mgd.core.gradle.s3.gradle.plugin/maven-metadata.xml.svg?label=gradle)](https://plugins.gradle.org/plugin/com.mgd.core.gradle.s3)
 
-Simple Gradle plugin that uploads and downloads S3 objects. This is a fork of the [mgk/s3-plugin](https://github.com/mgk/s3-plugin), which no longer appears to be under active development.
-It is designed to work with Gradle version 7 and later. 
+Simple Gradle plugin that uploads and downloads S3 objects. It is designed to work with Gradle version 7 and later. 
 
 ## Setup
 
@@ -40,12 +39,15 @@ s3 {
 
 ### Environment Variables
 
-Setting the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` is another way to provide your S3 credentials. Settings these variables
-at the machine-level will make them available for every Gradle project to use as the default credentials.
+Setting the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` is another way to provide your S3 credentials.
+Settings these variables at the machine-level will make them available for every Gradle project to use as the default
+credentials. The environment variables can also be set or overridden at the task level for each Gradle task which requires them.
+
 
 ### System Properties
 
-Another way to set credentials is to set system properties at the task level. This may be useful for managing multiple tasks in the same project which each require distinct credentials.  
+Another way to set S3 credentials is to set system properties at the Gradle task level. This may be useful for managing multiple
+tasks in the same project which each require distinct credentials.  
 For example, suppose you want distinct tasks for uploading to different S3 buckets, each with different security credentials.
 You could define different Gradle tasks (e.g. `uploadToS3Profile1`, `uploadToS3Profile2`) and map the credentials to each
 using system properties:
@@ -68,9 +70,10 @@ Note that this example is provided for illustrative purposes only. [All password
 A good option for managing secrets in build files is the [Gradle Credentials plugin](https://github.com/etiennestuder/gradle-credentials-plugin).
 
 ## Amazon EC2 Endpoint
-The `s3.endpoint` property can be used to define an Amazon EC2 compatible third-party cloud environment for all tasks (e.g. LocalStack).
+The `s3.endpoint` property can be used to define an Amazon EC2 compatible third-party cloud or Docker environment for all tasks (e.g. LocalStack).
 This option is only valid when combined with the `region` property (either defined globally using `s3.region` or defined for the task
-using task-level properties). Endpoints can also be defined on a per-task basis.
+using task-level properties). Endpoints can also be defined on a per-task basis, which enables switching between Amazon S3 and third-party
+endpoints for each task, if needed.
 
 ```groovy
 s3 {
@@ -155,7 +158,6 @@ Properties that apply to all modes:
 
   + `keyPrefix` - S3 prefix of objects to download *(optional, if not provided entire S3 bucket will be downloaded)*
   + `destDir` - local directory to download objects to
-  + `then` - *(optional)*, callback closure called upon completion with the java.io.File that was downloaded
 
 #### Path pattern matching:
  
@@ -165,7 +167,7 @@ Properties that apply to all modes:
     **NOTE:** when specifying folders, the folder name **must** end with a trailing forward slash, (i.e. `/`), otherwise it will be treated as an object name
   + a wildcard path pattern ending with an asterisk to search for matching folders (e.g. `/parent-folder/child-folder/folder-name-prefix-*`)
 + `destDir` - local directory to download objects into
-+ `then` - *(optional)*, callback closure called upon completion with each java.io.File that was downloaded.
++ `then` - *(optional, invoked only on individual S3 object name patterns)*, callback closure called upon completion with the java.io.File that was downloaded
 
 ### Example:
 
@@ -194,6 +196,7 @@ tasks.register('downloadRecursive', S3Download) {
     destDir = './some/recursive/targetDirectory'
     then = { File file ->
         // do something with the file
+        println("Downloaded file named ${file.name}!")
     }
 }
 
@@ -207,6 +210,7 @@ tasks.register('downloadPathPatterns', S3Download) {
     destDir = 'pathPatternMatches'
     then = { File file ->
         // do something with the file
+        println("Downloaded the file named 'path/to/filename.txt' to ${file.parent}!")
     }
 }
 

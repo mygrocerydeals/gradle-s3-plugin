@@ -105,7 +105,7 @@ abstract class S3Download extends AbstractS3Task {
                 String source = "s3://${taskBucket}${keyPrefix ? '/' + keyPrefix : ''}"
                 logger.quiet("S3 Download recursive ${source} -> ${destination}")
 
-                DownloadDirectoryRequest directoryRequest = getRecursiveDirectoryRequest(dir, keyPrefix, taskBucket)
+                DownloadDirectoryRequest directoryRequest = getRecursiveDirectoryRequest(dir, taskBucket, keyPrefix)
                 transfers = [manager.downloadDirectory(directoryRequest)]
             }
         }
@@ -121,7 +121,7 @@ abstract class S3Download extends AbstractS3Task {
 
             logger.quiet("S3 Download s3://${taskBucket}/${key} -> ${file}")
 
-            DownloadFileRequest fileRequest = getSingleFileRequest(file, key, taskBucket, then)
+            DownloadFileRequest fileRequest = getSingleFileRequest(file, taskBucket, key, then)
             transfers = [manager.downloadFile(fileRequest)]
         }
         else {
@@ -232,30 +232,15 @@ abstract class S3Download extends AbstractS3Task {
      */
     protected DownloadFileRequest getPathPatternFileRequest(File parentDir, String bucket, String pattern, Closure<Void> then) {
 
-        String key = pattern
         File f = new File(parentDir, pattern)
-        if (f.parentFile) {
-            (f.parentFile.canonicalFile).mkdirs()
-        }
 
-        AfterTransferListener transferListener = null
-        if (then) {
-            transferListener = new AfterTransferListener(f, then)
-        }
-
-        DownloadFileRequest fileRequest = DownloadFileRequest.builder()
-                .getObjectRequest(b -> b.bucket(bucket).key(key))
-                .destination(f.toPath())
-                .addTransferListener(new S3Listener(logger, transferListener))
-                .build()
-
-        return fileRequest
+        return getSingleFileRequest(f, bucket, pattern, then)
     }
 
     /**
      * Helper method to generate a DownloadDirectoryRequest for the directory key.
      */
-    protected DownloadDirectoryRequest getRecursiveDirectoryRequest(File parentDir, String key, String bucket) {
+    protected DownloadDirectoryRequest getRecursiveDirectoryRequest(File parentDir, String bucket, String key) {
 
         // create the parent directory if it doesn't already exist
         (parentDir.canonicalFile).mkdirs()
@@ -275,23 +260,32 @@ abstract class S3Download extends AbstractS3Task {
     }
 
     /**
-     * Helper method to generate a DownloadFileRequest for the file destination and key.
+     * Overloaded method to generate a DownloadFileRequest for the file destination and key.
      */
-    protected DownloadFileRequest getSingleFileRequest(String file, String key, String bucket, Closure<Void> then) {
+    protected DownloadFileRequest getSingleFileRequest(String file, String bucket, String key, Closure<Void> then) {
 
         File f = new File(file)
-        if (f.parentFile) {
-            (f.parentFile.canonicalFile).mkdirs()
+
+        return getSingleFileRequest(f, bucket, key, then)
+    }
+
+    /**
+     * Helper method to generate a DownloadFileRequest for the file destination and key.
+     */
+    protected DownloadFileRequest getSingleFileRequest(File file, String bucket, String key, Closure<Void> then) {
+
+        if (file.parentFile) {
+            (file.parentFile.canonicalFile).mkdirs()
         }
 
         AfterTransferListener transferListener = null
         if (then) {
-            transferListener = new AfterTransferListener(f, then)
+            transferListener = new AfterTransferListener(file, then)
         }
 
         DownloadFileRequest fileRequest = DownloadFileRequest.builder()
                 .getObjectRequest(b -> b.bucket(bucket).key(key))
-                .destination(f.toPath())
+                .destination(file.toPath())
                 .addTransferListener(new S3Listener(logger, transferListener))
                 .build()
 
