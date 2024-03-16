@@ -36,7 +36,7 @@ jobs:
         with:
           gradle-version: ${{ env.GRADLE_VERSION }}
       - name: Gradle Build and Publish
-        run: ./gradlew build --scan publish
+        run: ./gradlew build --stacktrace --scan publish
       - name: Gradle Release Task
         run: ./gradlew release -P release.useAutomaticVersion=true
       - name: Fetch Release Tag
