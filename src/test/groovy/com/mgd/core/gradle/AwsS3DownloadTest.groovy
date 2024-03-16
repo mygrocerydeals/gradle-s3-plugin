@@ -71,7 +71,7 @@ class AwsS3DownloadTest extends AwsSpecification {
         catch (Exception e) {
             String s = "Exception thrown in download test: ${e.message}"
             log.error(s, e)
-            error = s + " ; caused by: ${e.cause.message}"
+            error = s + " ; caused by: ${e.cause?.message ?: '<none>'}"
         }
 
         then:
