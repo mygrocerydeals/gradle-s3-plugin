@@ -189,15 +189,15 @@ tasks.register('singleFileDownload', S3Download) {
     bucket = 'task-source-bucketname'
     key = 'source-filename'
     file = 'target-filename'
+    then = { File file ->
+        // do something with the file
+        println("Downloaded file named ${file.name}!")
+    }
 }
 
 tasks.register('downloadRecursive', S3Download) {
     keyPrefix = 'recursive/sourceFolder'
     destDir = './some/recursive/targetDirectory'
-    then = { File file ->
-        // do something with the file
-        println("Downloaded file named ${file.name}!")
-    }
 }
 
 tasks.register('downloadPathPatterns', S3Download) {
