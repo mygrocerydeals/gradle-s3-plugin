@@ -17,7 +17,7 @@ class AwsS3DownloadTest extends AwsSpecification {
 
         seedS3DownloadBuckets(true)
         initializeTestProjectDirectory(DOWNLOAD_PROJECT_DIRECTORY)
-        initializeTestKitDirectory(DOWNLOAD_PROJECT_DIRECTORY)
+        initializeTestKitDirectory(TEST_KIT_ROOT_DIRECTORY)
     }
 
     def setup() {
@@ -56,7 +56,6 @@ class AwsS3DownloadTest extends AwsSpecification {
         File file = new File("${testKitParentDirectoryName}/${filename}")
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withTestKitDir(testKitRoot)
                 .withArguments('getSingleS3File')
                 .withPluginClasspath()
                 .build()
@@ -86,7 +85,6 @@ class AwsS3DownloadTest extends AwsSpecification {
         File file = new File("${testKitParentDirectoryName}/${filename}")
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withTestKitDir(testKitRoot)
                 .withArguments('--configuration-cache', 'getSingleS3FileCached')
                 .withPluginClasspath()
                 .build()

@@ -21,6 +21,7 @@ class BaseSpecification extends Specification {
 
     static final String DOWNLOAD_DIRECTORY_PREFIX = 'S3DownloadTest'
     static final String UPLOAD_DIRECTORY_PREFIX = 'S3UploadTest'
+    static final String TEST_KIT_ROOT_DIRECTORY = 'build/tmp/test/work/.gradle-test-kit'
     static final String DOWNLOAD_PROJECT_DIRECTORY = 'build/tmp/test/S3DownloadTest'
     static final String LOCALSTACK_DOWNLOAD_PROJECT_DIRECTORY = 'build/tmp/test/S3LocalStackDownloadTest'
     static final String DOWNLOAD_RESOURCES_DIRECTORY = 'src/test/resources/s3-download-bucket'

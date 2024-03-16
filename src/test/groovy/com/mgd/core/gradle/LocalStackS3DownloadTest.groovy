@@ -17,7 +17,7 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
 
         seedS3DownloadBuckets()
         initializeTestProjectDirectory(LOCALSTACK_DOWNLOAD_PROJECT_DIRECTORY)
-        initializeTestKitDirectory(LOCALSTACK_DOWNLOAD_PROJECT_DIRECTORY)
+        initializeTestKitDirectory(TEST_KIT_ROOT_DIRECTORY)
     }
 
     def setup() {
@@ -56,7 +56,6 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
         File file = new File("${testKitParentDirectoryName}/${filename}")
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withTestKitDir(testKitRoot)
                 .withArguments('getSingleS3File')
                 .withPluginClasspath()
                 .build()
@@ -91,7 +90,6 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
         File file = new File("${testKitParentDirectoryName}/${filename}")
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withTestKitDir(testKitRoot)
                 .withArguments('--configuration-cache', 'getSingleS3FileCached')
                 .withPluginClasspath()
                 .build()
