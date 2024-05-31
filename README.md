@@ -11,7 +11,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-    id 'com.mgd.core.gradle.s3' version '2.0.1'
+    id 'com.mgd.core.gradle.s3' version '2.0.2'
 }
 ```
 
@@ -50,13 +50,13 @@ Another way to set S3 credentials is to set system properties at the Gradle task
 tasks in the same project which each require distinct credentials.  
 For example, suppose you want distinct tasks for uploading to different S3 buckets, each with different security credentials.
 You could define different Gradle tasks (e.g. `uploadToS3Profile1`, `uploadToS3Profile2`) and map the credentials to each
-using system properties:
+using the AWS SDK v2 system properties:
 ```groovy
 ['Profile1', 'Profile2'].each { profile ->
     tasks.register("uploadToS3${profile}", S3Upload) {
-        // credentials injected into the project as profile1KeyId / profile1SecretKey and profile2KeyId / profile2SecretKey 
+        // credentials injected into the project as profile1KeyId, profile1SecretAccessKey and profile2KeyId, profile2SecretAccessKey 
         System.setProperty('aws.accessKeyId', project.ext."${profile.toLowerCase()}KeyId")
-        System.setProperty('aws.secretKey', project.ext."${profile.toLowerCase()}SecretKey")
+        System.setProperty('aws.secretAccessKey', project.ext."${profile.toLowerCase()}SecretAccessKey")
 
         bucket = 'target-bucketname'
         key = 'artifact.jar'
@@ -114,24 +114,24 @@ Uploads one or more files to S3. This task has two modes of operation: single fi
   
 Properties that apply to both modes:
 
-  + `profile` - credentials profile to use *(optional, defaults to the project `s3` configured profile)*
-  + `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket, if any)*
-  + `region` - the Amazon EC2 region *(optional, defaults to the project `s3` configured region, if any)*
-  + `endpoint` - the third-party Amazon EC2 endpoint *(optional, defaults to the project `s3` configured endpoint, if any)*
++ `profile` - credentials profile to use *(optional, defaults to the project `s3` configured profile)*
++ `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket, if any)*
++ `region` - the Amazon EC2 region *(optional, defaults to the project `s3` configured region, if any)*
++ `endpoint` - the third-party Amazon EC2 endpoint *(optional, defaults to the project `s3` configured endpoint, if any)*
 
 #### Single file upload:
 
-  + `key` - key of S3 object to create
-  + `file` - path of file to be uploaded
-  + `overwrite` - *(optional, default is `false`)*, if `true` the S3 object is created or overwritten if it already exists
-  + `then` - *(optional)*, callback closure called upon completion with the java.io.File that was uploaded
++ `key` - key of S3 object to create
++ `file` - path of file to be uploaded
++ `overwrite` - *(optional, default is `false`)*, if `true` the S3 object is created or overwritten if it already exists
++ `then` - *(optional)*, callback closure called upon completion with the java.io.File that was uploaded
 
 By default `S3Upload` does not overwrite the S3 object if it already exists. Set `overwrite` to `true` to upload the file even if it exists.
 
 #### Directory upload:
 
-  + `keyPrefix` - root S3 prefix under which to create the uploaded contents *(optional, if not provided files will be uploaded to S3 bucket root)*
-  + `sourceDir` - local directory containing the contents to be uploaded
++ `keyPrefix` - root S3 prefix under which to create the uploaded contents *(optional, if not provided files will be uploaded to S3 bucket root)*
++ `sourceDir` - local directory containing the contents to be uploaded
 
 A directory upload will always overwrite existing content if it already exists under the specified S3 prefix.
 
@@ -142,21 +142,26 @@ download, recursive download and path pattern matching.
   
 Properties that apply to all modes:
 
-  + `profile` - credentials profile to use *(optional, defaults to the project `s3` configured profile)*
-  + `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket, if any)*
-  + `region` - the Amazon EC2 region *(optional, defaults to the project `s3` configured region, if any)*
-  + `endpoint` - the third-party Amazon EC2 endpoint *(optional, defaults to the project `s3` configured endpoint, if any)*
++ `profile` - credentials profile to use *(optional, defaults to the project `s3` configured profile)*
++ `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket, if any)*
++ `region` - the Amazon EC2 region *(optional, defaults to the project `s3` configured region, if any)*
++ `endpoint` - the third-party Amazon EC2 endpoint *(optional, defaults to the project `s3` configured endpoint, if any)*
 
 #### Single file download:
 
-  + `key` - key of S3 object to download
-  + `file` - local path of file to save the download to
-  + `then` - *(optional)*, callback closure called upon completion with the java.io.File that was downloaded
++ `key` - key of S3 object to download
++ `file` - local path of file to save the download to
++ `version` - *(optional)*, the specific object version id to download if the bucket has S3 versioning enabled
+  + if S3 versioning is not enabled, this field should **not** be provided
+  + if S3 versioning is enabled and a version id is not provided, the latest file will be always be downloaded  
+  + discovery of S3 object version ids must be accomplished via other means and is beyond the scope of this plugin  
+    **NOTE:** care should be exercised when using this parameter, as incorrect values will cause the task to fail  
++ `then` - *(optional)*, callback closure called upon completion with the java.io.File that was downloaded
 
 #### Recursive download:
 
-  + `keyPrefix` - S3 prefix of objects to download *(optional, if not provided entire S3 bucket will be downloaded)*
-  + `destDir` - local directory to download objects to
++ `keyPrefix` - S3 prefix of objects to download *(optional, if not provided entire S3 bucket will be downloaded)*
++ `destDir` - local directory to download objects to
 
 #### Path pattern matching:
  

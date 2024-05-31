@@ -3,8 +3,10 @@ package com.mgd.core.gradle
 import groovy.io.FileType
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
+import org.gradle.testkit.runner.UnexpectedBuildFailure
 
 import static org.assertj.core.api.Assertions.assertThat
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
 /**
@@ -67,6 +69,64 @@ class AwsS3DownloadTest extends AwsSpecification {
         assertThat(file).exists()
             .isFile()
             .hasName(SINGLE_DOWNLOAD_FILENAME)
+    }
+
+    def 'should download single S3 file with version'() {
+
+        given:
+        String filename = "${DOWNLOAD_DIRECTORY_PREFIX}/${VERSIONED_DOWNLOAD_FILENAME}"
+        buildFile << """
+
+            task getSingleS3File(type: S3Download)  {
+                key = '${VERSIONED_DOWNLOAD_FILENAME}'
+                file = '${filename}'
+                version = '${objectVersionId}'
+            }
+        """
+
+        when:
+        File file = new File("${testKitParentDirectoryName}/${filename}")
+        BuildResult result = GradleRunner.create()
+                .withProjectDir(testProjectDir)
+                .withArguments('getSingleS3File')
+                .withPluginClasspath()
+                .build()
+
+        then:
+        String s = "S3 Download s3://${s3BucketName}/${VERSIONED_DOWNLOAD_FILENAME} -> ${filename}"
+        assertThat(parseOutput(result.output)).contains(s)
+        assertThat(result.task(':getSingleS3File').outcome).isEqualTo(SUCCESS)
+        assertThat(file).exists()
+                .isFile()
+                .hasName(VERSIONED_DOWNLOAD_FILENAME)
+    }
+
+    def 'should fail single S3 file download for incorrect version'() {
+
+        given:
+        String filename = "${DOWNLOAD_DIRECTORY_PREFIX}/invalid/${VERSIONED_DOWNLOAD_FILENAME}"
+        buildFile << """
+
+            task getSingleS3File(type: S3Download)  {
+                key = '${VERSIONED_DOWNLOAD_FILENAME}'
+                file = '${filename}'
+                version = 'invalid-version-id'
+            }
+        """
+
+        expect:
+        String s = "S3 Download s3://${s3BucketName}/${VERSIONED_DOWNLOAD_FILENAME} -> ${filename}"
+        assertThatExceptionOfType(UnexpectedBuildFailure)
+            .isThrownBy {
+                GradleRunner.create()
+                    .withProjectDir(testProjectDir)
+                    .withArguments('getSingleS3File')
+                    .withPluginClasspath()
+                    .build()
+            }
+            .withMessageContaining(s)
+            .withMessageContaining('Transfer failed:')
+            .withMessageContaining('software.amazon.awssdk.services.s3.model.S3Exception:')
     }
 
     def 'should download single S3 file with configuration cache enabled'() {

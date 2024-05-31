@@ -5,6 +5,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.s3.model.S3Object
 import software.amazon.awssdk.transfer.s3.S3TransferManager
 import software.amazon.awssdk.transfer.s3.config.DownloadFilter
@@ -27,6 +28,10 @@ abstract class S3Download extends AbstractS3Task {
     @Optional
     @Input
     String file
+
+    @Optional
+    @Input
+    String version
 
     @Optional
     @Input
@@ -65,8 +70,8 @@ abstract class S3Download extends AbstractS3Task {
             // need a local value here because Groovy somehow loses the ref to destinationDirectory in the collect{} closure
             File dir = destinationDirectory
 
-            if (key || file) {
-                String param = key ? 'key' : 'file'
+            if (key || file || version) {
+                String param = key ? 'key' : (file ? 'file' : 'version')
                 throw new GradleException("Invalid parameters: [${param}] is not valid for S3 Download recursive")
             }
 
@@ -121,7 +126,7 @@ abstract class S3Download extends AbstractS3Task {
 
             logger.quiet("S3 Download s3://${taskBucket}/${key} -> ${file}")
 
-            DownloadFileRequest fileRequest = getSingleFileRequest(file, taskBucket, key, then)
+            DownloadFileRequest fileRequest = getSingleFileRequest(file, taskBucket, key, version, then)
             transfers = [manager.downloadFile(fileRequest)]
         }
         else {
@@ -234,7 +239,7 @@ abstract class S3Download extends AbstractS3Task {
 
         File f = new File(parentDir, pattern)
 
-        return getSingleFileRequest(f, bucket, pattern, then)
+        return getSingleFileRequest(f, bucket, pattern, null, then)
     }
 
     /**
@@ -262,17 +267,17 @@ abstract class S3Download extends AbstractS3Task {
     /**
      * Overloaded method to generate a DownloadFileRequest for the file destination and key.
      */
-    protected DownloadFileRequest getSingleFileRequest(String file, String bucket, String key, Closure<Void> then) {
+    protected DownloadFileRequest getSingleFileRequest(String file, String bucket, String key, String version, Closure<Void> then) {
 
         File f = new File(file)
 
-        return getSingleFileRequest(f, bucket, key, then)
+        return getSingleFileRequest(f, bucket, key, version, then)
     }
 
     /**
      * Helper method to generate a DownloadFileRequest for the file destination and key.
      */
-    protected DownloadFileRequest getSingleFileRequest(File file, String bucket, String key, Closure<Void> then) {
+    protected DownloadFileRequest getSingleFileRequest(File file, String bucket, String key, String version, Closure<Void> then) {
 
         if (file.parentFile) {
             (file.parentFile.canonicalFile).mkdirs()
@@ -284,10 +289,15 @@ abstract class S3Download extends AbstractS3Task {
         }
 
         DownloadFileRequest fileRequest = DownloadFileRequest.builder()
-                .getObjectRequest(b -> b.bucket(bucket).key(key))
-                .destination(file.canonicalFile.toPath())
-                .addTransferListener(new S3Listener(logger, transferListener))
-                .build()
+            .getObjectRequest { GetObjectRequest.Builder builder ->
+                builder.bucket(bucket).key(key)
+                if (version) {
+                    builder.versionId(version)
+                }
+            }
+            .destination(file.canonicalFile.toPath())
+            .addTransferListener(new S3Listener(logger, transferListener))
+            .build()
 
         return fileRequest
     }

@@ -13,7 +13,7 @@ import java.text.SimpleDateFormat
  */
 class BaseSpecification extends Specification {
 
-    static final String GRADLE_VERSION = '8.6'
+    static final String GRADLE_VERSION = '8.7'
     static final String DAEMON_PREFIX = 'test-kit-daemon'
 
     static final String BUILD_FILE = 'build.gradle'
@@ -31,6 +31,7 @@ class BaseSpecification extends Specification {
     static final String DOWNLOAD_DIRECTORY_ROOT = 'download-dir-test'
     static final String DOWNLOAD_PATTERNS_ROOT = 'download-patterns-test'
     static final String SINGLE_DOWNLOAD_FILENAME = 'single-file.txt'
+    static final String VERSIONED_DOWNLOAD_FILENAME = 'versioned-single-file.txt'
 
     static final String SINGLE_UPLOAD_FILENAME = 'single-file-upload.txt'
     static final String UPLOAD_DIRECTORY_NAME = 'directory-upload'
@@ -46,6 +47,7 @@ class BaseSpecification extends Specification {
 
     static S3Client s3Client
     static String s3BucketName
+    static String objectVersionId
 
     static File testProjectDir
 
@@ -168,6 +170,16 @@ class BaseSpecification extends Specification {
                                             .key(key)
                                             .build()
             s3Client.putObject(request, file.toPath())
+
+            // add the single download file a second time and record the version
+            if (file.name == SINGLE_DOWNLOAD_FILENAME) {
+                request = PutObjectRequest.builder()
+                            .bucket(s3BucketName)
+                            .key(VERSIONED_DOWNLOAD_FILENAME)
+                            .build()
+                PutObjectResponse response = s3Client.putObject(request, file.toPath())
+                objectVersionId = response.versionId()
+            }
         }
 
         if (addLatency) {
@@ -181,20 +193,19 @@ class BaseSpecification extends Specification {
      */
     protected static void clearS3Bucket() {
 
-        ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
+        // delete all object versions which exist in the bucket
+        ListObjectVersionsRequest versionsRequest = ListObjectVersionsRequest.builder()
                 .bucket(s3BucketName)
                 .build()
+        ListObjectVersionsResponse response = s3Client.listObjectVersions(versionsRequest)
 
-        List<String> keys = s3Client.listObjectsV2(listRequest).contents()*.key()
-
-        if (keys) {
-            DeleteObjectsRequest deleteRequest = DeleteObjectsRequest.builder()
-                                                    .bucket(s3BucketName)
-                                                    .delete(Delete.builder()
-                                                            .objects(keys.collect { ObjectIdentifier.builder().key(it).build() })
-                                                            .build())
-                                                    .build()
-            s3Client.deleteObjects(deleteRequest)
+        response.versions().each { objectVersion ->
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(s3BucketName)
+                    .key(objectVersion.key())
+                    .versionId(objectVersion.versionId())
+                    .build()
+            )
         }
     }
 
