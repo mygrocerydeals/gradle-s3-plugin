@@ -64,7 +64,7 @@ gradlePlugin {
 
 Closure<Boolean> isNonStable = { String version ->
     Boolean stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { it -> version.toUpperCase().contains(it) }
-    String regex = /^[0-9,.v-]+(groovy-[0-9.]+)?(-r|-jre)?$/
+    String regex = /^[0-9,.v-]+((M\d-)?groovy-[0-9.]+)?(-r|-jre)?$/
     return !stableKeyword && !(version ==~ regex)
 }
 

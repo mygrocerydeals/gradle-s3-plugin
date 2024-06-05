@@ -13,7 +13,7 @@ import java.text.SimpleDateFormat
  */
 class BaseSpecification extends Specification {
 
-    static final String GRADLE_VERSION = '8.7'
+    static final String GRADLE_PROPERTIES_FILE = 'gradle.properties'
     static final String DAEMON_PREFIX = 'test-kit-daemon'
 
     static final String BUILD_FILE = 'build.gradle'
@@ -90,7 +90,12 @@ class BaseSpecification extends Specification {
      */
     protected static void initializeTestKitDirectory(String name) {
 
-        testKitParentDirectoryName = "${name}/${DAEMON_PREFIX}/${GRADLE_VERSION}"
+        Properties properties = new Properties()
+        new File(GRADLE_PROPERTIES_FILE).withInputStream {
+            properties.load(it)
+        }
+
+        testKitParentDirectoryName = "${name}/${DAEMON_PREFIX}/${properties.gradleWrapperVersion}"
         testKitDownloadDirectoryName = "${testKitParentDirectoryName}/${DOWNLOAD_DIRECTORY_PREFIX}"
         testKitUploadDirectoryName = "${testKitParentDirectoryName}/${UPLOAD_DIRECTORY_PREFIX}"
 
