@@ -8,7 +8,6 @@ on:
 env:
   JAVA_VERSION: '17'
   JAVA_DISTRIBUTION: 'corretto'
-  GRADLE_VERSION: 8.7
 
 jobs:
   Build:
@@ -32,9 +31,7 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-        with:
-          gradle-version: ${{ env.GRADLE_VERSION }}
+        uses: gradle/actions/setup-gradle@v3
       - name: Gradle Build and Publish
         run: ./gradlew build --stacktrace --debug --scan publish
       - name: Gradle Release Task
