@@ -5,8 +5,7 @@ plugins {
     id 'groovy'
     id 'com.github.ben-manes.versions' version "${versionsPluginVersion}"
     id 'net.researchgate.release' version "${versionIncrementPluginVersion}"
-    // -- disable CodeNarc plug - see workaround below --
-    //id 'codenarc'
+    id 'codenarc'
 }
 
 wrapper {
@@ -33,6 +32,11 @@ repositories {
 }
 
 dependencies {
+
+    // see https://github.com/CodeNarc/CodeNarc/issues/757#issuecomment-1847224932
+    codenarc group: 'org.codehaus.groovy', name: 'groovy-all', version: groovyVersion
+    codenarc group: 'org.codenarc', name: 'CodeNarc', version: codeNarcVersion
+
     implementation gradleApi()
     implementation localGroovy()
     api group: 'software.amazon.awssdk', name: 's3', version: amazonAwsSdkVersion
@@ -85,12 +89,6 @@ tasks.register('updateReadme') {
     }
 }
 
-/** CodeNarc Workaround START **/
-// Workarounds for Java 21 and CodeNarc Issues
-// See https://github.com/CodeNarc/CodeNarc/issues/757#issuecomment-1847224932
-
-// -- disabled codenarc plugin configuration --
-/*
 // Groovy static analysis tool
 codenarc {
     toolVersion = codeNarcVersion
@@ -101,49 +99,6 @@ codenarc {
 codenarcTest {
     ignoreFailures = false
 }
-*/
-
-// -- workaround config --
-configurations.register('codenarc') {
-    dependencies {
-        implementation("org.codenarc:CodeNarc:${codeNarcVersion}") {
-                    exclude(module: 'groovy-xml')
-        }
-    }
-}
-
-tasks.register('codenarcMain', JavaExec) {
-    mainClass = 'org.codenarc.CodeNarc'
-    args(
-            '-basedir=src/main/groovy',
-            '-rulesetfiles=file:config/codenarc/rules.groovy',
-            '-report=html:build/reports/codenarc/main.html',
-            '-maxPriority1Violations=0',
-            '-maxPriority2Violations=0',
-            '-maxPriority3Violations=0',
-    )
-    classpath = sourceSets.main.runtimeClasspath + configurations['codenarc']
-}
-
-tasks.register('codenarcTest', JavaExec) {
-    mainClass = 'org.codenarc.CodeNarc'
-    args(
-            '-basedir=src/test/groovy',
-            '-rulesetfiles=file:config/codenarc/rules.groovy',
-            '-report=html:build/reports/codenarc/test.html',
-            '-maxPriority1Violations=0',
-            '-maxPriority2Violations=0',
-            '-maxPriority3Violations=0'
-    )
-    classpath = sourceSets.main.runtimeClasspath + configurations['codenarc']
-}
-
-check.dependsOn codenarcMain
-check.dependsOn codenarcTest
-codenarcTest.mustRunAfter codenarcMain
-test.mustRunAfter codenarcTest
-
-/** CodeNarc Workaround END **/
 
 test {
     useJUnitPlatform {}
