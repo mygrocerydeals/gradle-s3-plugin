@@ -1,0 +1,22 @@
+# This Dependabot.yml file checks for updates to GitHub Actions versions used in workflow files.
+# It runs weekly on Monday at 4 PM EDT (8 PM UTC) and creates a single pull request with all version updates.
+# If an existing PR is open, it will be updated with any new changes rather than creating a new one.
+# The pull request will assign and request a review from given user.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/" # Root directory for workflow files
+    schedule:
+      interval: "weekly" # Run updates weekly
+      day: "monday" # Specify day of the week (e.g., Monday)
+      time: "20:00" # 8:00 PM UTC, equivalent to 4:00 PM EDT
+    open-pull-requests-limit: 1 # Limit to a single open PR
+    reviewers:
+      - "peter-thomas-mgd" # Assign reviewer for the PRs
+    assignees:
+      - "peter-thomas-mgd"
+    rebase-strategy: "auto" # Automatically rebase the open PR if there are new updates
+    groups:
+      github-actions-deps: # Groups all version updates in a single PR
+        patterns:
+          - "*"
