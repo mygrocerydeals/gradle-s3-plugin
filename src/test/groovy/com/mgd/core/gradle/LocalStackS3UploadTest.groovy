@@ -73,6 +73,41 @@ class LocalStackS3UploadTest extends LocalStackSpecification {
         assertThat(keys).isEqualTo(['single-file-upload.txt'])
     }
 
+    def 'should upload single file to S3 with path-style url'() {
+
+        given:
+        String filename = seedSingleUploadFile()
+        buildFile << """
+
+            task putSingleS3File(type: S3Upload)  {
+                System.setProperty('aws.accessKeyId', '${accessKeyId}')
+                System.setProperty('aws.secretKey', '${secretKey}')
+                usePathStyleUrl = true
+                key = '${SINGLE_UPLOAD_FILENAME}'
+                file = '${filename}'
+            }
+        """
+
+        when:
+        BuildResult result = GradleRunner.create()
+            .withProjectDir(testProjectDir)
+            .withArguments('putSingleS3File')
+            .withPluginClasspath()
+            .build()
+
+        then:
+        String s = "S3 Upload ${filename} -> s3://${s3BucketName}/${SINGLE_UPLOAD_FILENAME}"
+        assertThat(parseOutput(result.output)).contains(s)
+        assertThat(parseOutput(result.output)).contains('Executing S3 endpoint requests using path-style URLs')
+        assertThat(result.task(':putSingleS3File').outcome).isEqualTo(SUCCESS)
+
+        ListObjectsV2Request request = ListObjectsV2Request.builder()
+            .bucket(s3BucketName)
+            .build()
+        List<String> keys = s3Client.listObjectsV2(request).contents()*.key()
+        assertThat(keys).isEqualTo(['single-file-upload.txt'])
+    }
+
     def 'should upload single file to S3 with configuration cache enabled'() {
 
         given:

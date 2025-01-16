@@ -11,13 +11,15 @@ class S3Extension {
     private static String _endpoint
     private static String _region
     private static String _bucket
+    private static Boolean _pathStyle
 
     static Map<String, String> getProperties() {
         return [
-                profile: _profile,
-                endpoint: _endpoint,
-                region: _region,
-                bucket: _bucket
+            profile: _profile,
+            endpoint: _endpoint,
+            region: _region,
+            bucket: _bucket,
+            usePathStyleUrl: _pathStyle
         ]
     }
 
@@ -47,5 +49,12 @@ class S3Extension {
     }
     String getBucket() {
         return _bucket
+    }
+
+    void setusePathStyleUrl(Boolean pathStyle) {
+        _pathStyle = pathStyle
+    }
+    Boolean getusePathStyleUrl() {
+        return _pathStyle
     }
 }

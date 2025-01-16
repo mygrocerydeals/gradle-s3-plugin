@@ -36,6 +36,10 @@ abstract class AbstractS3Task extends DefaultTask {
     @Input
     String region
 
+    @Optional
+    @Input
+    Boolean usePathStyleUrl
+
     @Internal
     Closure<Void> then
 
@@ -64,21 +68,26 @@ abstract class AbstractS3Task extends DefaultTask {
     }
 
     @Internal
+    protected Boolean getTaskPathStyle() {
+        return usePathStyleUrl ?: getS3Property(PATH_STYLE)
+    }
+
+    @Internal
     protected S3Client getS3Client() {
 
         S3ClientBuilder builder = S3Client.builder()
 
         if (parsedEndpoint) {
             builder.endpointOverride(parsedEndpoint)
-                    .region(parsedRegion)
+                .region(parsedRegion)
         }
         else if (parsedRegion) {
             builder.region(parsedRegion)
         }
 
         return builder
-                .credentialsProvider(credentialsChain)
-                .build()
+            .credentialsProvider(credentialsChain)
+            .build()
     }
 
     @Internal
@@ -88,15 +97,20 @@ abstract class AbstractS3Task extends DefaultTask {
 
         if (parsedEndpoint) {
             builder.endpointOverride(parsedEndpoint)
-                    .region(parsedRegion)
+                .region(parsedRegion)
+
+            if (taskPathStyle) {
+                builder.forcePathStyle(true)
+                logger.quiet('Executing S3 endpoint requests using path-style URLs')
+            }
         }
         else if (parsedRegion) {
             builder.region(parsedRegion)
         }
 
         return builder
-                .credentialsProvider(credentialsChain)
-                .build()
+            .credentialsProvider(credentialsChain)
+            .build()
     }
 
     @Internal
@@ -118,8 +132,8 @@ abstract class AbstractS3Task extends DefaultTask {
         credentialsProviders << ContainerCredentialsProvider.builder().build()
 
         return AwsCredentialsProviderChain.builder()
-                .credentialsProviders(credentialsProviders)
-                .build()
+            .credentialsProviders(credentialsProviders)
+            .build()
     }
 
     @Internal
@@ -168,12 +182,13 @@ abstract class AbstractS3Task extends DefaultTask {
     private static final String PROFILE = 'profile'
     private static final String ENDPOINT = 'endpoint'
     private static final String REGION = 'region'
+    private static final String PATH_STYLE = 'usePathStyleUrl'
 
     private static final Pattern VALID_PATH_PATTERN = ~/^([a-zA-Z0-9-_\.\/])+(\*)?(\*?\/)?$/
     private static final Pattern VALID_KEY_PATTERN = ~/^([a-zA-Z0-9-_\.\/])+$/
 
     // helper method to return a named S3 Extension property
-    private String getS3Property(String name) {
+    private Object getS3Property(String name) {
 
         switch (name) {
             case BUCKET:
@@ -184,6 +199,8 @@ abstract class AbstractS3Task extends DefaultTask {
                 return S3Extension.properties.region
             case ENDPOINT:
                 return S3Extension.properties.endpoint
+            case PATH_STYLE:
+                return S3Extension.properties.usePathStyleUrl
             default:
                 return null
         }

@@ -11,7 +11,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-    id 'com.mgd.core.gradle.s3' version '2.0.11'
+    id 'com.mgd.core.gradle.s3' version '2.1.0'
 }
 ```
 
@@ -82,6 +82,21 @@ s3 {
 }
 ```
 
+## S3 Path-Style URLs
+
+[Amazon has deprecated path-style URLs for the S3 APIs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html#path-style-access). However, some third-party S3-compatible object storage providers specified using `s3.endpoint` may not support virtual-hosted style addressing (e.g. Oracle's Object Storage).
+The `s3.usePathStyleUrl` property can be used to default path-style S3 URls for all third-party provider tasks. This property can also be defined on a per-task basis.
+When defined at the global level, the property is ignored for any tasks which target native Amazon S3 buckets (which always use
+the default, virtual-hosted style URLs).
+
+```groovy
+s3 {
+  endpoint = 'https://my-tenancy.compat.objectstorage.us-chicago-1.oraclecloud.com'
+  region = 'global'
+  usePathStyleUrl = true
+}
+```
+
 ## Amazon EC2 Region
 
 The `s3.region` property can optionally be set to define the Amazon EC2 region if one has not been set in the authentication profile.
@@ -118,6 +133,7 @@ Properties that apply to both modes:
 + `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket, if any)*
 + `region` - the Amazon EC2 region *(optional, defaults to the project `s3` configured region, if any)*
 + `endpoint` - the third-party Amazon EC2 endpoint *(optional, defaults to the project `s3` configured endpoint, if any)*
++ `usePathStyleUrl` - whether to use path-style URLs for accessing third-party endpoints *(optional, defaults to the project `s3` configured value and ignored if `endpoint` is not set for the task)*
 
 #### Single file upload:
 
@@ -146,6 +162,7 @@ Properties that apply to all modes:
 + `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket, if any)*
 + `region` - the Amazon EC2 region *(optional, defaults to the project `s3` configured region, if any)*
 + `endpoint` - the third-party Amazon EC2 endpoint *(optional, defaults to the project `s3` configured endpoint, if any)*
++ `usePathStyleUrl` - whether to use path-style URLs for accessing third-party endpoints *(optional, defaults to the project `s3` configured value and ignored if `endpoint` is not set for the task)*
 
 #### Single file download:
 

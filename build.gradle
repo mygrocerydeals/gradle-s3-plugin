@@ -100,6 +100,13 @@ codenarcTest {
     ignoreFailures = false
 }
 
+[codenarcMain, codenarcTest].each { check ->
+    configure(check) {
+        group = 'codenarc'
+        description = 'Checks the sourceSet against CodeNarc linting rules'
+    }
+}
+
 test {
     useJUnitPlatform {}
 }

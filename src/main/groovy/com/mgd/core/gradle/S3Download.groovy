@@ -46,6 +46,7 @@ abstract class S3Download extends AbstractS3Task {
     String getDestDir() {
         return destination
     }
+
     void setDestDir(String destDir) {
         destination = destDir
         destinationDirectory = project.file(destDir)
@@ -59,8 +60,8 @@ abstract class S3Download extends AbstractS3Task {
         }
 
         S3TransferManager manager = S3TransferManager.builder()
-                                        .s3Client(asyncS3Client)
-                                        .build()
+            .s3Client(asyncS3Client)
+            .build()
 
         List<Transfer> transfers
 
@@ -185,10 +186,10 @@ abstract class S3Download extends AbstractS3Task {
         }
 
         DownloadDirectoryRequest directoryRequest = DownloadDirectoryRequest.builder()
-                .bucket(bucket)
-                .destination(parentDir.canonicalFile.toPath())
-                .filter(filter)
-                .build()
+            .bucket(bucket)
+            .destination(parentDir.canonicalFile.toPath())
+            .filter(filter)
+            .build()
 
         return directoryRequest
     }
@@ -225,9 +226,9 @@ abstract class S3Download extends AbstractS3Task {
         }
 
         DownloadDirectoryRequest.Builder builder = DownloadDirectoryRequest.builder()
-                .bucket(bucket)
-                .destination(parentDir.canonicalFile.toPath())
-                .filter(filter)
+            .bucket(bucket)
+            .destination(parentDir.canonicalFile.toPath())
+            .filter(filter)
 
         return builder.build()
     }
@@ -251,8 +252,8 @@ abstract class S3Download extends AbstractS3Task {
         (parentDir.canonicalFile).mkdirs()
 
         DownloadDirectoryRequest.Builder builder = DownloadDirectoryRequest.builder()
-                .bucket(bucket)
-                .destination(parentDir.canonicalFile.toPath())
+            .bucket(bucket)
+            .destination(parentDir.canonicalFile.toPath())
 
         if (key) {
             builder.listObjectsV2RequestTransformer(l -> l.prefix(key).delimiter('/'))

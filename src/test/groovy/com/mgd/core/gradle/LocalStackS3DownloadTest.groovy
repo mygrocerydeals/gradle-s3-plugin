@@ -69,6 +69,42 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
             .hasName(SINGLE_DOWNLOAD_FILENAME)
     }
 
+    def 'should download single S3 file with path-style url'() {
+
+        given:
+        String filename = "${DOWNLOAD_DIRECTORY_PREFIX}/${SINGLE_DOWNLOAD_FILENAME}"
+        buildFile << """
+
+            task getSingleS3File(type: S3Download)  {
+                System.setProperty('aws.accessKeyId', '${accessKeyId}')
+                System.setProperty('aws.secretKey', '${secretKey}')
+                endpoint = '${defaultEndpoint}'
+                usePathStyleUrl = true
+                region = '${defaultRegion}'
+                bucket = '${s3BucketName}'
+                key = '${SINGLE_DOWNLOAD_FILENAME}'
+                file = '${filename}'
+            }
+        """
+
+        when:
+        File file = new File("${testKitParentDirectoryName}/${filename}")
+        BuildResult result = GradleRunner.create()
+            .withProjectDir(testProjectDir)
+            .withArguments('getSingleS3File')
+            .withPluginClasspath()
+            .build()
+
+        then:
+        String s = "S3 Download s3://${s3BucketName}/${SINGLE_DOWNLOAD_FILENAME} -> ${filename}"
+        assertThat(parseOutput(result.output)).contains(s)
+        assertThat(parseOutput(result.output)).contains('Executing S3 endpoint requests using path-style URLs')
+        assertThat(result.task(':getSingleS3File').outcome).isEqualTo(SUCCESS)
+        assertThat(file).exists()
+            .isFile()
+            .hasName(SINGLE_DOWNLOAD_FILENAME)
+    }
+
     def 'should download single S3 file with configuration cache enabled'() {
 
         given:

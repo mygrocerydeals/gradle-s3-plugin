@@ -36,6 +36,7 @@ abstract class S3Upload extends AbstractS3Task {
     String getSourceDir() {
         return source
     }
+
     void setSourceDir(String sourceDir) {
         source = sourceDir
         sourceDirectory = project.file(sourceDir)
@@ -55,8 +56,8 @@ abstract class S3Upload extends AbstractS3Task {
         }
 
         S3TransferManager manager = S3TransferManager.builder()
-                .s3Client(asyncS3Client)
-                .build()
+            .s3Client(asyncS3Client)
+            .build()
 
         // directory upload
         if (source) {
@@ -73,10 +74,10 @@ abstract class S3Upload extends AbstractS3Task {
             logger.quiet("S3 Upload directory ${source} -> ${destination}")
 
             UploadDirectoryRequest request = UploadDirectoryRequest.builder()
-                                                .source(sourceDirectory.canonicalFile.toPath())
-                                                .bucket(taskBucket)
-                                                .s3Prefix(keyPrefix)
-                                                .build()
+                .source(sourceDirectory.canonicalFile.toPath())
+                .bucket(taskBucket)
+                .s3Prefix(keyPrefix)
+                .build()
 
             DirectoryUpload upload = manager.uploadDirectory(request)
             upload.completionFuture().join()
@@ -117,10 +118,10 @@ abstract class S3Upload extends AbstractS3Task {
             }
 
             UploadFileRequest request = UploadFileRequest.builder()
-                    .source(f.canonicalFile.toPath())
-                    .putObjectRequest(b -> b.bucket(taskBucket).key(key))
-                    .addTransferListener(new S3Listener(logger, transferListener))
-                    .build()
+                .source(f.canonicalFile.toPath())
+                .putObjectRequest(b -> b.bucket(taskBucket).key(key))
+                .addTransferListener(new S3Listener(logger, transferListener))
+                .build()
 
             FileUpload upload = manager.uploadFile(request)
             upload.completionFuture().join()
