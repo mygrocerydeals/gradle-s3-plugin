@@ -45,6 +45,8 @@ class BaseSpecification extends Specification {
 
     static final String DEFAULT_REGION = 'us-east-1'
 
+    static final String PATH_STYLE_MESSAGE = 'Executing S3 endpoint requests using path-style URLs'
+
     static S3Client s3Client
     static String s3BucketName
     static String objectVersionId
@@ -71,6 +73,14 @@ class BaseSpecification extends Specification {
         }
 
         return s3BucketName
+    }
+
+    /**
+     * Getter to generate the S3 path for a single upload file.
+     */
+    protected static String getUploadPath() {
+
+        return "${s3BucketName}/${SINGLE_UPLOAD_FILENAME}"
     }
 
     /**
@@ -258,5 +268,63 @@ class BaseSpecification extends Specification {
         return output
                 .split(/\n/)
                 *.trim()
+    }
+
+    /**
+     * Helper method to generate the message for a single file download.
+     */
+    protected String fileDownloadMessage(String bucket, String key, String filename, Boolean isNativeAws = true) {
+
+        return "S3 Download ${targetUri(bucket, key, isNativeAws)} -> ${filename}"
+    }
+
+    /**
+     * Helper method to generate the message for a directory download.
+     */
+    protected String directoryDownloadMessage(String bucket, String key, String directory, Boolean isNativeAws = true) {
+
+        return "S3 Download recursive ${targetUri(bucket, key, isNativeAws)} -> ${directory}"
+    }
+
+    /**
+     * Helper method to generate the message for a download using path patterns.
+     */
+    protected String pathPatternsDownloadMessage(String bucket, List<String> patterns, String directory, Boolean isNativeAws = true) {
+
+        return "S3 Download from ${targetUri(bucket, null, isNativeAws)} with path patterns [${patterns.join(', ')}] -> ${directory}"
+    }
+
+    /**
+     * Helper method to generate the message for a single file upload.
+     */
+    protected String fileUploadMessage(String bucket, String key, String filename, Boolean isNativeAws = true) {
+
+        return "S3 Upload ${filename} -> ${targetUri(bucket, key, isNativeAws)}"
+    }
+
+    /**
+     * Helper method to generate the message for a directory upload.
+     */
+    protected String directoryUploadMessage(String bucket, String key, String directory, Boolean isNativeAws = true) {
+
+        return "S3 Upload directory ${directory} -> ${targetUri(bucket, key, isNativeAws)}"
+    }
+
+    /**
+     * Helper method to determine the target URI for the request.
+     */
+    protected String targetUri(String bucket, String key, Boolean isNativeAws) {
+
+        if (isNativeAws) {
+            return "s3://${bucket}${key ? '/' + key : ''}"
+        }
+
+        // use the S3 utilities to get the URL
+        GetUrlRequest.Builder getUrlRequest = GetUrlRequest.builder()
+            .bucket(bucket)
+            .key(key ?: '/')
+
+        URL url = s3Client.utilities().getUrl(getUrlRequest.build())
+        return url.toString()
     }
 }

@@ -61,8 +61,9 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
                 .build()
 
         then:
-        String s = "S3 Download s3://${s3BucketName}/${SINGLE_DOWNLOAD_FILENAME} -> ${filename}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(fileDownloadMessage(s3BucketName, SINGLE_DOWNLOAD_FILENAME, filename, false))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':getSingleS3File').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
             .isFile()
@@ -96,9 +97,9 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
             .build()
 
         then:
-        String s = "S3 Download s3://${s3BucketName}/${SINGLE_DOWNLOAD_FILENAME} -> ${filename}"
-        assertThat(parseOutput(result.output)).contains(s)
-        assertThat(parseOutput(result.output)).contains('Executing S3 endpoint requests using path-style URLs')
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(fileDownloadMessage(s3BucketName, SINGLE_DOWNLOAD_FILENAME, filename, false))
+        assertThat(messages).contains(PATH_STYLE_MESSAGE)
         assertThat(result.task(':getSingleS3File').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
             .isFile()
@@ -131,8 +132,9 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
                 .build()
 
         then:
-        String s = "S3 Download s3://${s3BucketName}/${SINGLE_DOWNLOAD_FILENAME} -> ${filename}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(fileDownloadMessage(s3BucketName, SINGLE_DOWNLOAD_FILENAME, filename, false))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':getSingleS3FileCached').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
                 .isFile()
@@ -172,8 +174,9 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
                 .build()
 
         then:
-        String s = "S3 Download recursive s3://${s3BucketName}/${SINGLE_DIRECTORY_NAME} -> ${DOWNLOAD_DIRECTORY_ROOT}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(directoryDownloadMessage(s3BucketName, SINGLE_DIRECTORY_NAME, DOWNLOAD_DIRECTORY_ROOT, false))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':getS3Directory').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
                 .isDirectory()
@@ -219,8 +222,9 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
                 .build()
 
         then:
-        String s = "S3 Download recursive s3://${s3BucketName}/${SINGLE_DIRECTORY_NAME} -> ${DOWNLOAD_DIRECTORY_ROOT}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(directoryDownloadMessage(s3BucketName, SINGLE_DIRECTORY_NAME, DOWNLOAD_DIRECTORY_ROOT, false))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':getS3DirectoryCached').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
                 .isDirectory()
@@ -273,8 +277,9 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
                 .build()
 
         then:
-        String s = "S3 Download path patterns s3://${s3BucketName}/${SIMPLE_FILE_MATCHING_PATTERN},${COMPOUND_FILE_MATCHING_PATTERN},${SINGLE_DIRECTORY_NAME}/,${SINGLE_DOWNLOAD_FILENAME} -> ${DOWNLOAD_PATTERNS_ROOT}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(pathPatternsDownloadMessage(s3BucketName, [SIMPLE_FILE_MATCHING_PATTERN, COMPOUND_FILE_MATCHING_PATTERN, "${SINGLE_DIRECTORY_NAME}/", SINGLE_DOWNLOAD_FILENAME], DOWNLOAD_PATTERNS_ROOT, false))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':getS3PathPatterns').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
             .isDirectory()
@@ -327,8 +332,9 @@ class LocalStackS3DownloadTest extends LocalStackSpecification {
                 .build()
 
         then:
-        String s = "S3 Download path patterns s3://${s3BucketName}/${SIMPLE_FILE_MATCHING_PATTERN},${COMPOUND_FILE_MATCHING_PATTERN},${SINGLE_DIRECTORY_NAME}/,${SINGLE_DOWNLOAD_FILENAME} -> ${DOWNLOAD_PATTERNS_ROOT}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(pathPatternsDownloadMessage(s3BucketName, [SIMPLE_FILE_MATCHING_PATTERN, COMPOUND_FILE_MATCHING_PATTERN, "${SINGLE_DIRECTORY_NAME}/", SINGLE_DOWNLOAD_FILENAME], DOWNLOAD_PATTERNS_ROOT, false))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':getS3PathPatternsCached').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
                 .isDirectory()

@@ -56,8 +56,9 @@ class AwsS3UploadTest extends AwsSpecification {
                 .build()
 
         then:
-        String s = "S3 Upload ${filename} -> s3://${s3BucketName}/${SINGLE_UPLOAD_FILENAME}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(fileUploadMessage(s3BucketName, SINGLE_UPLOAD_FILENAME, filename))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':putSingleS3File').outcome).isEqualTo(SUCCESS)
 
         ListObjectsV2Request request = ListObjectsV2Request.builder()
@@ -89,8 +90,9 @@ class AwsS3UploadTest extends AwsSpecification {
                 .build()
 
         then:
-        String s = "S3 Upload ${filename} -> s3://${s3BucketName}/${SINGLE_UPLOAD_FILENAME}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(fileUploadMessage(s3BucketName, SINGLE_UPLOAD_FILENAME, filename))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':putSingleS3FileCached').outcome).isEqualTo(SUCCESS)
 
         ListObjectsV2Request request = ListObjectsV2Request.builder()
@@ -124,8 +126,9 @@ class AwsS3UploadTest extends AwsSpecification {
                 .build()
 
         then:
-        String s = "S3 Upload directory ${UPLOAD_DIRECTORY_NAME} -> s3://${s3BucketName}/${UPLOAD_DIRECTORY_NAME}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(directoryUploadMessage(s3BucketName, UPLOAD_DIRECTORY_NAME, UPLOAD_DIRECTORY_NAME))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':putS3Directory').outcome).isEqualTo(SUCCESS)
 
         ListObjectsV2Request request = ListObjectsV2Request.builder()
@@ -159,8 +162,9 @@ class AwsS3UploadTest extends AwsSpecification {
                 .build()
 
         then:
-        String s = "S3 Upload directory ${UPLOAD_DIRECTORY_NAME} -> s3://${s3BucketName}/${UPLOAD_DIRECTORY_NAME}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(directoryUploadMessage(s3BucketName, UPLOAD_DIRECTORY_NAME, UPLOAD_DIRECTORY_NAME))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':putS3DirectoryCached').outcome).isEqualTo(SUCCESS)
 
         ListObjectsV2Request request = ListObjectsV2Request.builder()

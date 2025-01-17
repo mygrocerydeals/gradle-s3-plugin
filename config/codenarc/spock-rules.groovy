@@ -1,8 +1,10 @@
 ruleset {
 
-    description 'MGD CodeNarc RuleSet'
+    description 'MGD CodeNarc RuleSet for Spock Tests'
 
     // rulesets/basic.xml
+    // skipped: MultipleUnaryOperators
+    // skipped: DoubleNegative
     AssertWithinFinallyBlock
     AssignmentInConditional
     BigDecimalInstantiation
@@ -17,7 +19,6 @@ ruleset {
     ConstantIfExpression
     ConstantTernaryExpression
     DeadCode
-    DoubleNegative
     DuplicateCaseStatement
     DuplicateMapKey
     DuplicateSetValue
@@ -41,7 +42,6 @@ ruleset {
     HardCodedWindowsFileSeparator
     HardCodedWindowsRootDirectory
     IntegerGetInteger
-    MultipleUnaryOperators
     ParameterAssignmentInFilterClosure
     RandomDoubleCoercedToZero
     RemoveAllOnSelf
@@ -135,9 +135,9 @@ ruleset {
     VectorIsObsolete
 
     // rulesets/design.xml
+    // skipped: AssignmentToStaticFieldFromInstanceMethod
     AbstractClassWithPublicConstructor
     AbstractClassWithoutAbstractMethod
-    AssignmentToStaticFieldFromInstanceMethod
     BooleanMethodReturnsNull
     BuilderMethodWithSideEffects {
         methodNameRegex = '(make.*|build.*)'
@@ -311,6 +311,7 @@ ruleset {
 
     // rulesets/junit.xml
     // skipped: JUnitTestMethodWithoutAssert
+    // skipped: JUnitPublicNonTestMethod
     ChainedTest
     CoupledTestCase
     JUnitAssertAlwaysFails
@@ -318,7 +319,6 @@ ruleset {
     JUnitFailWithoutMessage
     JUnitLostTest
     JUnitPublicField
-    JUnitPublicNonTestMethod
     JUnitPublicProperty
     JUnitSetUpCallsSuper
     JUnitStyleAssertions

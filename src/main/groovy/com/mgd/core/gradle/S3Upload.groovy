@@ -70,8 +70,7 @@ abstract class S3Upload extends AbstractS3Task {
                 logger.quiet('Parameter [keyPrefix] was not provided: files will be uploaded to the S3 bucket root folder')
             }
 
-            String destination = "s3://${taskBucket}${keyPrefix ? '/' + keyPrefix : ''}"
-            logger.quiet("S3 Upload directory ${source} -> ${destination}")
+            logger.quiet("S3 Upload directory ${source} -> ${targetUri(keyPrefix)}")
 
             UploadDirectoryRequest request = UploadDirectoryRequest.builder()
                 .source(sourceDirectory.canonicalFile.toPath())
@@ -92,7 +91,8 @@ abstract class S3Upload extends AbstractS3Task {
                 throw new GradleException('Invalid parameters: [keyPrefix] is not valid for S3 Upload single file')
             }
 
-            String message = "S3 Upload ${file} -> s3://${taskBucket}/${key}"
+            String uri = targetUri(key)
+            String message = "S3 Upload ${file} -> ${uri}"
 
             try {
                 s3Client.headObject(b -> b.bucket(taskBucket).key(key))
@@ -100,7 +100,7 @@ abstract class S3Upload extends AbstractS3Task {
                     message += ' with overwrite'
                 }
                 else {
-                    logger.error("s3://${taskBucket}/${key} exists, not overwriting. If you want to overwrite a file you must specify overwrite = true in the task.")
+                    logger.error("${uri} exists, not overwriting. If you want to overwrite a file you must specify overwrite = true in the task.")
                     return
                 }
             }

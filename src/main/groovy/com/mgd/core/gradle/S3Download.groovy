@@ -81,7 +81,7 @@ abstract class S3Download extends AbstractS3Task {
                     throw new GradleException('Invalid parameters: [pathPatterns] cannot be combined with [keyPrefix] for S3 Download recursive')
                 }
 
-                logger.quiet("S3 Download path patterns s3://${taskBucket}/${pathPatterns.join(',')} -> ${destination}")
+                logger.quiet("S3 Download from ${targetUri(null)} with path patterns [${pathPatterns.join(', ')}] -> ${destination}")
 
                 transfers = pathPatterns.collect { String pattern ->
 
@@ -108,8 +108,7 @@ abstract class S3Download extends AbstractS3Task {
                 // recursive directory download
                 parseKey(keyPrefix)
 
-                String source = "s3://${taskBucket}${keyPrefix ? '/' + keyPrefix : ''}"
-                logger.quiet("S3 Download recursive ${source} -> ${destination}")
+                logger.quiet("S3 Download recursive ${targetUri(keyPrefix)} -> ${destination}")
 
                 DownloadDirectoryRequest directoryRequest = getRecursiveDirectoryRequest(dir, taskBucket, keyPrefix)
                 transfers = [manager.downloadDirectory(directoryRequest)]
@@ -125,7 +124,7 @@ abstract class S3Download extends AbstractS3Task {
                 throw new GradleException("Invalid parameters: [${param}] is not valid for S3 Download single file")
             }
 
-            logger.quiet("S3 Download s3://${taskBucket}/${key} -> ${file}")
+            logger.quiet("S3 Download ${targetUri(key)} -> ${file}")
 
             DownloadFileRequest fileRequest = getSingleFileRequest(file, taskBucket, key, version, then)
             transfers = [manager.downloadFile(fileRequest)]

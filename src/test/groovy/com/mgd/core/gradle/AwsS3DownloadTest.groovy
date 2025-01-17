@@ -63,8 +63,9 @@ class AwsS3DownloadTest extends AwsSpecification {
                     .build()
 
         then:
-        String s = "S3 Download s3://${s3BucketName}/${SINGLE_DOWNLOAD_FILENAME} -> ${filename}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(fileDownloadMessage(s3BucketName, SINGLE_DOWNLOAD_FILENAME, filename))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':getSingleS3File').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
             .isFile()
@@ -93,8 +94,9 @@ class AwsS3DownloadTest extends AwsSpecification {
                 .build()
 
         then:
-        String s = "S3 Download s3://${s3BucketName}/${VERSIONED_DOWNLOAD_FILENAME} -> ${filename}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(fileDownloadMessage(s3BucketName, VERSIONED_DOWNLOAD_FILENAME, filename))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':getSingleS3File').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
                 .isFile()
@@ -115,7 +117,6 @@ class AwsS3DownloadTest extends AwsSpecification {
         """
 
         expect:
-        String s = "S3 Download s3://${s3BucketName}/${VERSIONED_DOWNLOAD_FILENAME} -> ${filename}"
         assertThatExceptionOfType(UnexpectedBuildFailure)
             .isThrownBy {
                 GradleRunner.create()
@@ -124,7 +125,7 @@ class AwsS3DownloadTest extends AwsSpecification {
                     .withPluginClasspath()
                     .build()
             }
-            .withMessageContaining(s)
+            .withMessageContaining(fileDownloadMessage(s3BucketName, VERSIONED_DOWNLOAD_FILENAME, filename))
             .withMessageContaining('Transfer failed:')
             .withMessageContaining('software.amazon.awssdk.services.s3.model.S3Exception:')
     }
@@ -150,8 +151,9 @@ class AwsS3DownloadTest extends AwsSpecification {
                 .build()
 
         then:
-        String s = "S3 Download s3://${s3BucketName}/${SINGLE_DOWNLOAD_FILENAME} -> ${filename}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(fileDownloadMessage(s3BucketName, SINGLE_DOWNLOAD_FILENAME, filename))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':getSingleS3FileCached').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
                 .isFile()
@@ -186,8 +188,9 @@ class AwsS3DownloadTest extends AwsSpecification {
                 .build()
 
         then:
-        String s = "S3 Download recursive s3://${s3BucketName}/${SINGLE_DIRECTORY_NAME} -> ${DOWNLOAD_DIRECTORY_ROOT}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(directoryDownloadMessage(s3BucketName, SINGLE_DIRECTORY_NAME, DOWNLOAD_DIRECTORY_ROOT))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':getS3Directory').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
                 .isDirectory()
@@ -224,8 +227,9 @@ class AwsS3DownloadTest extends AwsSpecification {
                 .build()
 
         then:
-        String s = "S3 Download recursive s3://${s3BucketName}/${SINGLE_NESTED_DIRECTORY_NAME} -> ${DOWNLOAD_DIRECTORY_ROOT}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(directoryDownloadMessage(s3BucketName, SINGLE_NESTED_DIRECTORY_NAME, DOWNLOAD_DIRECTORY_ROOT))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':getS3Directory').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
                 .isDirectory()
@@ -266,8 +270,9 @@ class AwsS3DownloadTest extends AwsSpecification {
                 .build()
 
         then:
-        String s = "S3 Download recursive s3://${s3BucketName}/${SINGLE_DIRECTORY_NAME} -> ${DOWNLOAD_DIRECTORY_ROOT}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(directoryDownloadMessage(s3BucketName, SINGLE_DIRECTORY_NAME, DOWNLOAD_DIRECTORY_ROOT))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':getS3DirectoryCached').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
                 .isDirectory()
@@ -316,8 +321,9 @@ class AwsS3DownloadTest extends AwsSpecification {
                 .build()
 
         then:
-        String s = "S3 Download path patterns s3://${s3BucketName}/${SIMPLE_FILE_MATCHING_PATTERN},${MULTI_DIRECTORY_MATCHING_PATTERN},${COMPOUND_FILE_MATCHING_PATTERN},${SINGLE_DIRECTORY_NAME}/,${SINGLE_DOWNLOAD_FILENAME} -> ${DOWNLOAD_PATTERNS_ROOT}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(pathPatternsDownloadMessage(s3BucketName, [SIMPLE_FILE_MATCHING_PATTERN, MULTI_DIRECTORY_MATCHING_PATTERN, COMPOUND_FILE_MATCHING_PATTERN, "${SINGLE_DIRECTORY_NAME}/", SINGLE_DOWNLOAD_FILENAME], DOWNLOAD_PATTERNS_ROOT))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':getS3PathPatterns').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
             .isDirectory()
@@ -360,8 +366,9 @@ class AwsS3DownloadTest extends AwsSpecification {
                 .build()
 
         then:
-        String s = "S3 Download path patterns s3://${s3BucketName}/${DIRECTORY_MATCHING_PATTERN}/ -> ${DOWNLOAD_PATTERNS_ROOT}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(pathPatternsDownloadMessage(s3BucketName, ["${DIRECTORY_MATCHING_PATTERN}/"], DOWNLOAD_PATTERNS_ROOT))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':getS3PathPatterns').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
                 .isDirectory()
@@ -408,8 +415,9 @@ class AwsS3DownloadTest extends AwsSpecification {
                 .build()
 
         then:
-        String s = "S3 Download path patterns s3://${s3BucketName}/${SIMPLE_FILE_MATCHING_PATTERN},${COMPOUND_FILE_MATCHING_PATTERN},${SINGLE_DIRECTORY_NAME}/,${SINGLE_DOWNLOAD_FILENAME} -> ${DOWNLOAD_PATTERNS_ROOT}"
-        assertThat(parseOutput(result.output)).contains(s)
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(pathPatternsDownloadMessage(s3BucketName, [SIMPLE_FILE_MATCHING_PATTERN, COMPOUND_FILE_MATCHING_PATTERN, "${SINGLE_DIRECTORY_NAME}/", SINGLE_DOWNLOAD_FILENAME], DOWNLOAD_PATTERNS_ROOT))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
         assertThat(result.task(':getS3PathPatternsCached').outcome).isEqualTo(SUCCESS)
         assertThat(file).exists()
                 .isDirectory()

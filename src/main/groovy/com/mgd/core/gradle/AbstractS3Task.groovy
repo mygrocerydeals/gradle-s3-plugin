@@ -11,6 +11,7 @@ import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.S3ClientBuilder
 import software.amazon.awssdk.services.s3.S3CrtAsyncClientBuilder
+import software.amazon.awssdk.services.s3.model.GetUrlRequest
 
 import java.util.regex.Pattern
 
@@ -80,6 +81,10 @@ abstract class AbstractS3Task extends DefaultTask {
         if (parsedEndpoint) {
             builder.endpointOverride(parsedEndpoint)
                 .region(parsedRegion)
+
+            if (taskPathStyle) {
+                builder.forcePathStyle(true)
+            }
         }
         else if (parsedRegion) {
             builder.region(parsedRegion)
@@ -175,6 +180,22 @@ abstract class AbstractS3Task extends DefaultTask {
             return key
         }
         throw new GradleException("Invalid S3 path: ${key}")
+    }
+
+    // helper method to determine the target URI for the request
+    protected String targetUri(String key) {
+
+        if (!taskEndpoint) {
+            return "s3://${taskBucket}${key ? '/' + key : ''}"
+        }
+
+        // if a third-party endpoint is set, use the S3 utilities to get the URL
+        GetUrlRequest.Builder getUrlRequest = GetUrlRequest.builder()
+            .bucket(taskBucket)
+            .key(key ?: '/')
+
+        URL url = s3Client.utilities().getUrl(getUrlRequest.build())
+        return url.toString()
     }
 
     // S3 Extension property names

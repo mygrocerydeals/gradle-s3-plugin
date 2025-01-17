@@ -94,10 +94,11 @@ codenarc {
     toolVersion = codeNarcVersion
     configFile = file("${rootProject.projectDir}/config/codenarc/rules.groovy")
     reportFormat = 'html'
+    ignoreFailures = false
 }
 
 codenarcTest {
-    ignoreFailures = false
+    configFile = file("${rootProject.projectDir}/config/codenarc/spock-rules.groovy")
 }
 
 [codenarcMain, codenarcTest].each { check ->

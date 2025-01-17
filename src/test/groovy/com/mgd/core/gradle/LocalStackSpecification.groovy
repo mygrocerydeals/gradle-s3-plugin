@@ -41,12 +41,12 @@ class LocalStackSpecification extends BaseSpecification {
         secretKey = localStack.secretKey
 
         StaticCredentialsProvider credentialsProvider = StaticCredentialsProvider.create(
-                AwsBasicCredentials.create(localStack.accessKey, localStack.secretKey))
+            AwsBasicCredentials.create(localStack.accessKey, localStack.secretKey))
 
         s3Client = S3Client.builder()
-                        .credentialsProvider(credentialsProvider)
-                        .endpointOverride(URI.create(defaultEndpoint))
-                        .region(Region.of(defaultRegion))
-                        .build()
+            .credentialsProvider(credentialsProvider)
+            .endpointOverride(URI.create(defaultEndpoint))
+            .region(Region.of(defaultRegion))
+            .build()
     }
 }
