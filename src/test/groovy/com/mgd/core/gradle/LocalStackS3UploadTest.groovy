@@ -74,6 +74,17 @@ class LocalStackS3UploadTest extends LocalStackSpecification {
                 .build()
         List<String> keys = s3Client.listObjectsV2(request).contents()*.key()
         assertThat(keys).isEqualTo(['single-file-upload.txt'])
+
+
+        //validate default content type
+        HeadObjectRequest headRequest = HeadObjectRequest.builder()
+                .bucket(s3BucketName)
+                .key(keys.first)
+                .build()
+
+        HeadObjectResponse response = s3Client.headObject(headRequest)
+        //https://github.com/assertj/doc/issues/167#issuecomment-2491657623
+        !! assertThat(response.contentType()).isEqualTo('application/octet-stream')
     }
 
     def 'should upload single file to S3 with content-type'() {
@@ -113,6 +124,7 @@ class LocalStackS3UploadTest extends LocalStackSpecification {
         List<String> keys = s3Client.listObjectsV2(request).contents()*.key()
         assertThat(keys).isEqualTo(['single-file-upload.txt'])
 
+        //validate provided content type
         HeadObjectRequest headRequest = HeadObjectRequest.builder()
                 .bucket(s3BucketName)
                 .key(keys.first)
