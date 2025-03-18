@@ -33,6 +33,10 @@ abstract class S3Upload extends AbstractS3Task {
 
     @Optional
     @Input
+    String contentType
+
+    @Optional
+    @Input
     String getSourceDir() {
         return source
     }
@@ -62,8 +66,8 @@ abstract class S3Upload extends AbstractS3Task {
         // directory upload
         if (source) {
 
-            if (key || file) {
-                throw new GradleException('Invalid parameters: [key, file] are not valid for S3 Upload directory')
+            if (key || file || contentType) {
+                throw new GradleException('Invalid parameters: [key, file, contentType] are not valid for S3 Upload directory')
             }
 
             if (!keyPrefix) {
@@ -119,7 +123,7 @@ abstract class S3Upload extends AbstractS3Task {
 
             UploadFileRequest request = UploadFileRequest.builder()
                 .source(f.canonicalFile.toPath())
-                .putObjectRequest(b -> b.bucket(taskBucket).key(key))
+                .putObjectRequest(b -> b.bucket(taskBucket).key(key).contentType(contentType))
                 .addTransferListener(new S3Listener(logger, transferListener))
                 .build()
 
