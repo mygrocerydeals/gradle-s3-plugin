@@ -11,6 +11,7 @@ bin/
 logs/
 
 *.iml
+*.log
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

@@ -128,8 +128,12 @@ ruleset {
     NoJavaUtilDate
     NoTabCharacter
     ParameterReassignment
-    PublicMethodsBeforeNonPublicMethods
-    StaticMethodsBeforeInstanceMethods
+    PublicMethodsBeforeNonPublicMethods {
+        ignoreMethodNames = 'initialize,get*,set*'
+    }
+    StaticMethodsBeforeInstanceMethods {
+        ignoreMethodNames = 'initialize,get*,set*'
+    }
     TernaryCouldBeElvis
     VariableTypeRequired
     VectorIsObsolete

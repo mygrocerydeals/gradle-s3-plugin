@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.s3.S3ClientBuilder
 import software.amazon.awssdk.services.s3.S3CrtAsyncClientBuilder
 import software.amazon.awssdk.services.s3.model.GetUrlRequest
 
+import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 /**
@@ -182,6 +183,20 @@ abstract class AbstractS3Task extends DefaultTask {
         throw new GradleException("Invalid S3 path: ${key}")
     }
 
+    // helper method to parse and validate content type for S3 file uploads
+    protected void parseContentType(String type) {
+
+        Matcher matcher = type =~ VALID_CONTENT_TYPE_PATTERN
+        if (!matcher.matches()) {
+            throw new GradleException("Malformed contentType value: ${type}")
+        }
+
+        String mediaType = matcher.group('type')
+        if (!VALID_MEDIA_TYPES.contains(mediaType)) {
+            throw new GradleException("Invalid media type for contentType value '${type}'; media type must be one of ${VALID_MEDIA_TYPES}: ${mediaType}")
+        }
+    }
+
     // helper method to determine the target URI for the request
     protected String targetUri(String key) {
 
@@ -207,6 +222,12 @@ abstract class AbstractS3Task extends DefaultTask {
 
     private static final Pattern VALID_PATH_PATTERN = ~/^([a-zA-Z0-9-_\.\/])+(\*)?(\*?\/)?$/
     private static final Pattern VALID_KEY_PATTERN = ~/^([a-zA-Z0-9-_\.\/])+$/
+
+    // S3 content type validation
+    private static final Pattern VALID_CONTENT_TYPE_PATTERN = ~/^(?<type>\w+|\*)\/(?<format>[\w\-\.+]+|\*)(\s*;\s*(?<param>\w+)\s*=\s*(?<value>\S+))?$/
+    private static final List<String> VALID_MEDIA_TYPES = [
+        'application', 'audio', 'example', 'font', 'haptics', 'image', 'message', 'model', 'multipart', 'text', 'video'
+    ]
 
     // helper method to return a named S3 Extension property
     private Object getS3Property(String name) {

@@ -11,7 +11,7 @@ Add the following to your build.gradle file:
 
 ```groovy
 plugins {
-    id 'com.mgd.core.gradle.s3' version '2.1.2'
+    id 'com.mgd.core.gradle.s3' version '2.2.0'
 }
 ```
 
@@ -139,7 +139,7 @@ Properties that apply to both modes:
 
 + `key` - key of S3 object to create
 + `file` - path of file to be uploaded
-+ `contentType` - the content type of the file being uploaded *(optional, s3 will default to 
++ `contentType` - the Content-Type S3 metadata value for the file *(optional, s3 will default to 
   `application/octet-stream`)*
 + `overwrite` - *(optional, default is `false`)*, if `true` the S3 object is created or overwritten if it already exists
 + `then` - *(optional)*, callback closure called upon completion with the java.io.File that was uploaded

@@ -95,6 +95,10 @@ abstract class S3Upload extends AbstractS3Task {
                 throw new GradleException('Invalid parameters: [keyPrefix] is not valid for S3 Upload single file')
             }
 
+            if (contentType) {
+                parseContentType(contentType)
+            }
+
             String uri = targetUri(key)
             String message = "S3 Upload ${file} -> ${uri}"
 
