@@ -2,6 +2,8 @@ package com.mgd.core.gradle
 
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
 
 import static org.assertj.core.api.Assertions.assertThat
@@ -72,6 +74,65 @@ class LocalStackS3UploadTest extends LocalStackSpecification {
                 .build()
         List<String> keys = s3Client.listObjectsV2(request).contents()*.key()
         assertThat(keys).isEqualTo(['single-file-upload.txt'])
+
+
+        //validate default content type
+        HeadObjectRequest headRequest = HeadObjectRequest.builder()
+                .bucket(s3BucketName)
+                .key(keys.first)
+                .build()
+
+        HeadObjectResponse response = s3Client.headObject(headRequest)
+        //https://github.com/assertj/doc/issues/167#issuecomment-2491657623
+        !! assertThat(response.contentType()).isEqualTo('application/octet-stream')
+    }
+
+    def 'should upload single file to S3 with content-type'() {
+
+        given:
+        String filename = seedSingleUploadFile()
+        buildFile << """
+
+            task putSingleS3File(type: S3Upload)  {
+                System.setProperty('aws.accessKeyId', '${accessKeyId}')
+                System.setProperty('aws.secretKey', '${secretKey}')
+                key = '${SINGLE_UPLOAD_FILENAME}'
+                file = '${filename}'
+                contentType = 'text/plain'
+            }
+        """
+
+        when:
+        BuildResult result = GradleRunner.create()
+                .withProjectDir(testProjectDir)
+                .withArguments('putSingleS3File')
+                .withPluginClasspath()
+                .build()
+
+        then:
+        List<String> messages = parseOutput(result.output)
+        assertThat(messages).contains(fileUploadMessage(s3BucketName, SINGLE_UPLOAD_FILENAME, filename, false))
+        assertThat(messages).doesNotContain(PATH_STYLE_MESSAGE)
+        assertThat(result.task(':putSingleS3File').outcome).isEqualTo(SUCCESS)
+
+        ListObjectsV2Request request = ListObjectsV2Request.builder()
+                .bucket(s3BucketName)
+                .build()
+
+        var content = s3Client.listObjectsV2(request).contents()
+
+        List<String> keys = s3Client.listObjectsV2(request).contents()*.key()
+        assertThat(keys).isEqualTo(['single-file-upload.txt'])
+
+        //validate provided content type
+        HeadObjectRequest headRequest = HeadObjectRequest.builder()
+                .bucket(s3BucketName)
+                .key(keys.first)
+                .build()
+
+        HeadObjectResponse response = s3Client.headObject(headRequest)
+        //https://github.com/assertj/doc/issues/167#issuecomment-2491657623
+        !! assertThat(response.contentType()).isEqualTo('text/plain')
     }
 
     def 'should upload single file to S3 with path-style url'() {
