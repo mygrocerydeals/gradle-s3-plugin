@@ -213,24 +213,8 @@ abstract class AbstractS3Task extends DefaultTask {
         return url.toString()
     }
 
-    // S3 Extension property names
-    private static final String BUCKET = 'bucket'
-    private static final String PROFILE = 'profile'
-    private static final String ENDPOINT = 'endpoint'
-    private static final String REGION = 'region'
-    private static final String PATH_STYLE = 'usePathStyleUrl'
-
-    private static final Pattern VALID_PATH_PATTERN = ~/^([a-zA-Z0-9-_\.\/])+(\*)?(\*?\/)?$/
-    private static final Pattern VALID_KEY_PATTERN = ~/^([a-zA-Z0-9-_\.\/])+$/
-
-    // S3 content type validation
-    private static final Pattern VALID_CONTENT_TYPE_PATTERN = ~/^(?<type>\w+|\*)\/(?<format>[\w\-\.+]+|\*)(\s*;\s*(?<param>\w+)\s*=\s*(?<value>\S+))?$/
-    private static final List<String> VALID_MEDIA_TYPES = [
-        'application', 'audio', 'example', 'font', 'haptics', 'image', 'message', 'model', 'multipart', 'text', 'video'
-    ]
-
     // helper method to return a named S3 Extension property
-    private Object getS3Property(String name) {
+    protected Object getS3Property(String name) {
 
         switch (name) {
             case BUCKET:
@@ -247,4 +231,20 @@ abstract class AbstractS3Task extends DefaultTask {
                 return null
         }
     }
+
+    // S3 Extension property names
+    private static final String BUCKET = 'bucket'
+    private static final String PROFILE = 'profile'
+    private static final String ENDPOINT = 'endpoint'
+    private static final String REGION = 'region'
+    private static final String PATH_STYLE = 'usePathStyleUrl'
+
+    private static final Pattern VALID_PATH_PATTERN = ~/^([a-zA-Z0-9-_\.\/])+(\*)?(\*?\/)?$/
+    private static final Pattern VALID_KEY_PATTERN = ~/^([a-zA-Z0-9-_\.\/])+$/
+
+    // S3 content type validation
+    private static final Pattern VALID_CONTENT_TYPE_PATTERN = ~/^(?<type>\w+|\*)\/(?<format>[\w\-\.+]+|\*)(\s*;\s*(?<param>\w+)\s*=\s*(?<value>\S+))?$/
+    private static final List<String> VALID_MEDIA_TYPES = [
+        'application', 'audio', 'example', 'font', 'haptics', 'image', 'message', 'model', 'multipart', 'text', 'video'
+    ]
 }
