@@ -34,20 +34,20 @@ repositories {
 dependencies {
 
     // see https://github.com/CodeNarc/CodeNarc/issues/757#issuecomment-1847224932
-    codenarc group: 'org.codehaus.groovy', name: 'groovy-all', version: groovyVersion
-    codenarc group: 'org.codenarc', name: 'CodeNarc', version: codeNarcVersion
+    codenarc("org.codehaus.groovy:groovy-all:${groovyVersion}")
+    codenarc("org.codenarc:CodeNarc:${codeNarcVersion}")
 
     implementation gradleApi()
     implementation localGroovy()
-    api group: 'software.amazon.awssdk', name: 's3', version: amazonAwsSdkVersion
-    api group: 'software.amazon.awssdk', name: 's3-transfer-manager', version: amazonAwsSdkVersion
-    api group: 'software.amazon.awssdk.crt', name: 'aws-crt', version: amazonAwsSdkCrtVersion
+    api("software.amazon.awssdk:s3:${amazonAwsSdkVersion}")
+    api("software.amazon.awssdk:s3-transfer-manager:${amazonAwsSdkVersion}")
+    api("software.amazon.awssdk.crt:aws-crt:${amazonAwsSdkCrtVersion}")
 
-    testRuntimeOnly group:'org.junit.platform', name: 'junit-platform-launcher', version: jUnitTestLauncherVersion
-    testImplementation group: 'org.spockframework', name: 'spock-core', version: spockVersion
-    testImplementation group: 'org.assertj', name: 'assertj-core', version: assertJVersion
-    testImplementation group: 'org.testcontainers', name: 'spock', version:  testContainersVersion
-    testImplementation group: 'org.testcontainers', name: 'localstack', version:  testContainersVersion
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:${jUnitTestLauncherVersion}")
+    testImplementation("org.spockframework:spock-core:${spockVersion}")
+    testImplementation("org.assertj:assertj-core:${assertJVersion}")
+    testImplementation("org.testcontainers:spock:${ testContainersVersion}")
+    testImplementation("org.testcontainers:localstack:${ testContainersVersion}")
 }
 
 gradlePlugin {
