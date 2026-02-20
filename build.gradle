@@ -34,7 +34,7 @@ repositories {
 dependencies {
 
     // see https://github.com/CodeNarc/CodeNarc/issues/757#issuecomment-1847224932
-    codenarc("org.apache.groovy:groovy-all:${groovyVersion}")
+    codenarc("org.apache.groovy:groovy-all:${codeNarGroovyVersion}")
     codenarc("org.codenarc:CodeNarc:${codeNarcVersion}")
 
     implementation gradleApi()
@@ -109,6 +109,10 @@ codenarcTest {
 }
 
 test {
+    doFirst {
+        String groovyVer = GroovySystem.version
+        logger.lifecycle("Running plugin with Groovy version ${groovyVer} (bundled with Gradle)")
+    }
     useJUnitPlatform {}
 }
 
