@@ -1,6 +1,7 @@
 package com.mgd.core.gradle
 
 import org.gradle.api.GradleException
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
@@ -14,6 +15,7 @@ import software.amazon.awssdk.transfer.s3.model.UploadFileRequest
 /**
  * S3 Upload Gradle task implementation.
  */
+@CacheableTask
 abstract class S3Upload extends AbstractS3Task {
 
     private String source

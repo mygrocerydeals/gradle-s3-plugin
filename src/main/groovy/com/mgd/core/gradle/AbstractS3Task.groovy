@@ -2,6 +2,7 @@ package com.mgd.core.gradle
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
@@ -19,6 +20,7 @@ import java.util.regex.Pattern
 /**
  * Abstract base class for the S3Upload and S3Download S3 Gradle plugin tasks.
  */
+@CacheableTask
 abstract class AbstractS3Task extends DefaultTask {
 
     // common Gradle task properties with default values in S3 Extension
@@ -124,8 +126,8 @@ abstract class AbstractS3Task extends DefaultTask {
 
         ProfileCredentialsProvider profileCreds
         if (taskProfile) {
-            logger.quiet("Using AWS credentials profile: ${profile}")
-            profileCreds = ProfileCredentialsProvider.create(profile)
+            logger.quiet("Using AWS credentials profile: ${taskProfile}")
+            profileCreds = ProfileCredentialsProvider.create(taskProfile)
         }
         else {
             profileCreds = ProfileCredentialsProvider.create()
