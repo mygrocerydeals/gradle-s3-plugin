@@ -26,8 +26,11 @@ jobs:
     permissions:
       contents: write   # release task pushes the version commit and tag; release-action creates the GitHub Release
     steps:
+      # A queued run must build the current branch tip, which includes the previous run's version commit.
       - name: Checkout Repository
         uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.ref_name }}
       - name: Set up AWS credentials
         uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
