@@ -6,6 +6,14 @@ on:
       - 'master'
     paths-ignore:
       - '.github/**'
+      - '**.md'
+
+permissions: {}
+
+# Queue releases instead of cancelling one mid-push.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
 
 env:
   JAVA_VERSION: '21'
@@ -14,34 +22,44 @@ env:
 jobs:
   Build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write   # release task pushes the version commit and tag; release-action creates the GitHub Release
     steps:
+      # A queued run must build the current branch tip, which includes the previous run's version commit.
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.ref_name }}
       - name: Set up AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
+        uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
           aws-access-key-id: ${{ secrets.S3_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.S3_AWS_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
       - name: Configure Git Identity
+        env:
+          GIT_USER_EMAIL: ${{ vars.GIT_USER_EMAIL }}
+          GIT_USERNAME: ${{ vars.GIT_USERNAME }}
         run: |
-            git config --global user.email "${{ vars.GIT_USER_EMAIL }}"
-            git config --global user.name "${{ vars.GIT_USERNAME }}"
+            git config --global user.email "$GIT_USER_EMAIL"
+            git config --global user.name "$GIT_USERNAME"
       - name: Set up Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6.1.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
-      - name: Gradle Build and Publish
-        run: ./gradlew build --stacktrace --debug --scan publish
+        uses: gradle/actions/setup-gradle@v6.4.1
+      - name: Gradle Build
+        run: ./gradlew build --stacktrace --scan
       - name: Gradle Release Task
         run: ./gradlew release -P release.useAutomaticVersion=true
       - name: Fetch Release Tag
         id: release_tag
-        run: echo "::set-output name=TAG::$(git describe --abbrev=0 --tags)"
+        run: echo "TAG=$(git describe --abbrev=0 --tags)" >> "$GITHUB_OUTPUT"
       - name: Create GitHub Release
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@v1.21.0
         with:
           tag: ${{ steps.release_tag.outputs.TAG }}
+          generateReleaseNotes: true
