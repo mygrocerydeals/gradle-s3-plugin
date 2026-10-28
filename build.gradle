@@ -3,7 +3,7 @@ plugins {
     id 'com.gradle.plugin-publish' version "${gradlePluginPublishVersion}"
     id 'idea'
     id 'groovy'
-    id 'com.github.ben-manes.versions' version "${versionsPluginVersion}"
+    id 'io.github.ben-manes.versions' version "${versionsPluginVersion}"
     id 'net.researchgate.release' version "${versionIncrementPluginVersion}"
     id 'codenarc'
 }
