@@ -1,9 +1,9 @@
 # Gradle S3 Plugin
 [![Install](https://img.shields.io/badge/install-plugin-brown.svg)](https://plugins.gradle.org/plugin/com.mgd.core.gradle.s3)
-[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 [![Gradle Plugin](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com/mgd/core/gradle/s3/com.mgd.core.gradle.s3.gradle.plugin/maven-metadata.xml.svg?label=gradle)](https://plugins.gradle.org/plugin/com.mgd.core.gradle.s3)
 
-Simple Gradle plugin that uploads and downloads S3 objects. It is designed to work with Gradle version 7 and later. 
+Simple Gradle plugin that uploads and downloads S3 objects. It is built and tested with Gradle 9.x; earlier Gradle versions are not tested.
 
 ## Setup
 
@@ -17,7 +17,7 @@ plugins {
 
 ## Versioning
 
-This project uses [semantic versioning](http://semver.org)
+This project uses [semantic versioning](https://semver.org)
 
 See [gradle plugin page](https://plugins.gradle.org/plugin/com.mgd.core.gradle.s3) for other versions.
 
@@ -25,7 +25,7 @@ See [gradle plugin page](https://plugins.gradle.org/plugin/com.mgd.core.gradle.s
 
 ## Authentication
 
-The S3 plugin searches for credentials in the same order as the [AWS default credentials provider chain](http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html). See the [AWS Docs](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html) for details on credentials.
+The S3 plugin searches for credentials in the same order as the [AWS SDK for Java v2 default credentials provider chain](https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/credentials-chain.html). See the [AWS Docs](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html) for details on credentials.
 
 ### Profiles
 You can specify a default credentials profile for the project to use by setting the project `s3.profile` property.
@@ -69,8 +69,8 @@ using the AWS SDK v2 system properties:
 Note that this example is provided for illustrative purposes only. [All passwords should be externalized, secured via access control and/or encrypted.](https://docs.gradle.org/current/userguide/authoring_maintainable_build_scripts.html#sec:avoiding_passwords_in_plain_text)
 A good option for managing secrets in build files is the [Gradle Credentials plugin](https://github.com/etiennestuder/gradle-credentials-plugin).
 
-## Amazon EC2 Endpoint
-The `s3.endpoint` property can be used to define an Amazon EC2 compatible third-party cloud or Docker environment for all tasks (e.g. LocalStack).
+## S3 Endpoint
+The `s3.endpoint` property can be used to define an Amazon S3 compatible third-party cloud or Docker environment for all tasks (e.g. LocalStack).
 This option is only valid when combined with the `region` property (either defined globally using `s3.region` or defined for the task
 using task-level properties). Endpoints can also be defined on a per-task basis, which enables switching between Amazon S3 and third-party
 endpoints for each task, if needed.
@@ -97,9 +97,9 @@ s3 {
 }
 ```
 
-## Amazon EC2 Region
+## AWS Region
 
-The `s3.region` property can optionally be set to define the Amazon EC2 region if one has not been set in the authentication profile.
+The `s3.region` property can optionally be set to define the AWS region if one has not been set in the authentication profile.
 It can also be used to override the default region set in the AWS credentials provider. Regions can also be defined on a per-task basis.
 
 ```groovy
@@ -131,8 +131,8 @@ Properties that apply to both modes:
 
 + `profile` - credentials profile to use *(optional, defaults to the project `s3` configured profile)*
 + `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket, if any)*
-+ `region` - the Amazon EC2 region *(optional, defaults to the project `s3` configured region, if any)*
-+ `endpoint` - the third-party Amazon EC2 endpoint *(optional, defaults to the project `s3` configured endpoint, if any)*
++ `region` - the AWS region *(optional, defaults to the project `s3` configured region, if any)*
++ `endpoint` - the third-party S3 endpoint *(optional, defaults to the project `s3` configured endpoint, if any)*
 + `usePathStyleUrl` - whether to use path-style URLs for accessing third-party endpoints *(optional, defaults to the project `s3` configured value and ignored if `endpoint` is not set for the task)*
 
 #### Single file upload:
@@ -162,8 +162,8 @@ Properties that apply to all modes:
 
 + `profile` - credentials profile to use *(optional, defaults to the project `s3` configured profile)*
 + `bucket` - S3 bucket to use *(optional, defaults to the project `s3` configured bucket, if any)*
-+ `region` - the Amazon EC2 region *(optional, defaults to the project `s3` configured region, if any)*
-+ `endpoint` - the third-party Amazon EC2 endpoint *(optional, defaults to the project `s3` configured endpoint, if any)*
++ `region` - the AWS region *(optional, defaults to the project `s3` configured region, if any)*
++ `endpoint` - the third-party S3 endpoint *(optional, defaults to the project `s3` configured endpoint, if any)*
 + `usePathStyleUrl` - whether to use path-style URLs for accessing third-party endpoints *(optional, defaults to the project `s3` configured value and ignored if `endpoint` is not set for the task)*
 
 #### Single file download:
@@ -305,5 +305,9 @@ tasks.register('pruneDownload', Copy) {
 
 Downloads report percentage progress at the gradle INFO level. Run gradle with the `-i` option to see download progress.
 
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, test and open a pull request.
+
 ## License
-[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
