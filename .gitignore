@@ -1,38 +1,19 @@
-.idea
-target/
-.idea/workspace.xml
-.gradle
-build
-out
-tags
-web/catalina.base_IS_UNDEFINED
-spec/node_modules
+# Gradle
+.gradle/
+build/
+out/
 bin/
-logs/
+.gradletasknamecache
 
+# IDEs
+.idea/
 *.iml
-*.log
-
-# Elastic Beanstalk Files
-.elasticbeanstalk/*
-!.elasticbeanstalk/*.cfg.yml
-!.elasticbeanstalk/*.global.yml
-web/src/spec/api/node_modules
-.env
-node_modules
-npm-debug.log
-reports
-data
-
-=======
-# IntelliJ Workspace
-.idea/*
-GeoLite2-City.mmdb
-
-#=====
-#Eclipse
-.DS_Store
+.vscode/
 .classpath
 .project
 .settings/
-.vscode/
+
+# OS and local files
+.DS_Store
+*.log
+.env

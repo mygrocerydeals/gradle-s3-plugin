@@ -1,5 +1,13 @@
 plugins {
-    id 'com.gradle.enterprise' version "${gradleEnterpriseVersion}"
+    id 'com.gradle.develocity' version "${develocityVersion}"
+}
+
+// publish build scans to scans.gradle.com when run with --scan
+develocity {
+    buildScan {
+        termsOfUseUrl = 'https://gradle.com/help/legal-terms-of-use'
+        termsOfUseAgree = 'yes'
+    }
 }
 
 rootProject.name='gradle-s3-plugin'
