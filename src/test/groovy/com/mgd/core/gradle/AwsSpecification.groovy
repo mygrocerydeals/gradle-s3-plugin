@@ -6,10 +6,13 @@ import software.amazon.awssdk.services.s3.model.BucketVersioningStatus
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest
 import software.amazon.awssdk.services.s3.model.PutBucketVersioningRequest
 import software.amazon.awssdk.services.s3.model.VersioningConfiguration
+import spock.lang.IgnoreIf
 
 /**
  * Base Spock test specification for all tests which run against the concrete AWS EC2 cloud platform.
+ * Skipped in CI when no AWS credentials are available (pull requests from forks do not receive repository secrets).
  */
+@IgnoreIf(value = { env.CI && !env.AWS_ACCESS_KEY_ID }, inherited = true)
 class AwsSpecification extends BaseSpecification {
 
     /**

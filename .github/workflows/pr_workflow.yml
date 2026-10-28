@@ -3,6 +3,13 @@ name: Build and Test PR
 on:
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 env:
   JAVA_VERSION: '21'
   JAVA_DISTRIBUTION: 'corretto'
@@ -10,10 +17,15 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      # Secrets are not available to pull requests from forks; the real-AWS specs skip without credentials.
       - name: Set up AWS credentials
+        if: github.event.pull_request.head.repo.full_name == github.repository
         uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
           aws-access-key-id: ${{ secrets.S3_AWS_ACCESS_KEY_ID }}
