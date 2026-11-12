@@ -1,0 +1,77 @@
+name: Publish to Gradle Plugin Portal
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish, for example v3.0.7'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+env:
+  JAVA_VERSION: '21'
+  JAVA_DISTRIBUTION: 'corretto'
+
+jobs:
+  publish:
+    # Only the workflow file on master may publish; a copy dispatched from another branch is skipped.
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Holds GRADLE_PUBLISH_KEY and GRADLE_PUBLISH_SECRET; its required reviewers approve each publish.
+    environment: plugin-portal
+    steps:
+      - name: Validate Tag Format
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag '$TAG' is not a release tag of the form vX.Y.Z"
+            exit 1
+          fi
+      - name: Checkout Tag
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check Tag Is on Master
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          if ! git merge-base --is-ancestor HEAD origin/master; then
+            echo "::error::Tag '$TAG' does not point to a commit on master"
+            exit 1
+          fi
+      - name: Set up Java
+        uses: actions/setup-java@v6.1.0
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+      # No shared cache: pull request builds must not be able to influence what gets published.
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6.4.1
+        with:
+          cache-disabled: true
+      - name: Check Project Version Matches Tag
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          version="$(./gradlew -q --console=plain properties --property version | sed -n 's/^version: //p')"
+          if [[ "v${version}" != "$TAG" ]]; then
+            echo "::error::Project version '${version}' does not match tag '$TAG'"
+            exit 1
+          fi
+      # publishPlugins validates the plugin metadata before uploading; --validate-only also needs the keys.
+      - name: Publish Plugin
+        env:
+          GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
+          GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
+        run: ./gradlew publishPlugins

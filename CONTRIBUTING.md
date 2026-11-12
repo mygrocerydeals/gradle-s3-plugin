@@ -18,7 +18,7 @@ Open an issue using one of the templates. For bugs, include the plugin, Gradle a
 
 Without AWS credentials, run `./gradlew codenarcMain codenarcTest validatePlugins test --tests '*LocalStack*'` instead. In CI, the real-AWS specs are skipped automatically when no credentials are available, which is always the case for pull requests from forks.
 
-The build rewrites the version in the README's setup snippet to the current project version. Do not commit that change; maintainers update the README as part of a release.
+The build rewrites the version in the README's setup snippet to the current project version. Do not commit that change; the release workflow updates the README.
 
 ## Pull requests
 
@@ -30,4 +30,6 @@ The build rewrites the version in the README's setup snippet to the current proj
 
 ## Releases
 
-Merging to `master` runs the "Build and Publish" workflow, which tags the release as `vX.Y.Z`, sets the next version and creates a GitHub Release with generated notes. Changes only to Markdown files or `.github/` do not trigger a release, and maintainers add `[skip ci]` to the merge commit for other changes that do not affect the published plugin. Publishing to the Gradle Plugin Portal is done by the maintainers.
+Merging to `master` runs the "Build and Publish" workflow, which tags the release as `vX.Y.Z`, sets the next version, updates the README setup snippet to the released version and creates a GitHub Release with generated notes. Changes only to Markdown files or `.github/` do not trigger a release, and maintainers add `[skip ci]` to the squash commit message for other changes that do not affect the published plugin.
+
+Maintainers publish a release to the Gradle Plugin Portal by running the "Publish to Gradle Plugin Portal" workflow from the Actions tab with the release tag (for example `v3.0.7`). The workflow checks that the tag matches the project version, waits for approval on the `plugin-portal` environment and runs `./gradlew publishPlugins`. Publish every release tag soon after it is created, because the README already points at it. Portal versions cannot be replaced, which is another reason to merge changes that do not affect the plugin with `[skip ci]` so they do not create a tag.
